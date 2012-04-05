@@ -61,7 +61,7 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
               handshake.generateResponse(event);
               ((UpgradableHttpServletResponse) response).sendUpgrade();
               createSessionBufferEntry(event);
-              notifyConnectionBegin(event.getHttpServletRequest().getSession());
+              notifyConnectionBegin(event);
             }
           }
         }
@@ -93,7 +93,7 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
     }
   }
 
-  protected abstract void notifyConnectionBegin(final HttpSession session) throws IOException;
+  protected abstract void notifyConnectionBegin(final HttpEvent event) throws IOException;
 
   protected abstract void handleReceivedEvent(HttpEvent event, String text) throws IOException;
 
