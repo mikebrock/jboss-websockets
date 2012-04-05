@@ -13,11 +13,15 @@ import org.jboss.servlet.http.UpgradableHttpServletResponse;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +31,7 @@ import java.util.List;
  *
  * @author Mike Brock
  */
-public class WebsocketServlet extends HttpServlet implements HttpEventServlet {
+public abstract class WebsocketServlet extends HttpServlet implements HttpEventServlet {
   private static final List<Handshake> websocketHandshakes;
 
   static {
@@ -40,10 +44,10 @@ public class WebsocketServlet extends HttpServlet implements HttpEventServlet {
     websocketHandshakes = Collections.unmodifiableList(handshakeList);
   }
 
-  private final List<WebsocketFrameListener> frameListeners = new ArrayList<WebsocketFrameListener>();
-  private final TransmissionBuffer masterBuffer = TransmissionBuffer.createDirect();
-
+  private final TransmissionBuffer masterReadBuffer = TransmissionBuffer.createDirect();
   private static final String SESSION_READ_BUFFER_KEY = "JBoss:Experimental:WebsocketReadBuffer";
+  private static final String SESSION_WRITE_STREAM_KEY = "JBoss:Experimental:WebsocketWriteStream";
+
 
   public void event(final HttpEvent event) throws IOException, ServletException {
     switch (event.getType()) {
@@ -57,6 +61,7 @@ public class WebsocketServlet extends HttpServlet implements HttpEventServlet {
               handshake.generateResponse(event);
               ((UpgradableHttpServletResponse) response).sendUpgrade();
               createSessionBufferEntry(event);
+              notifyConnectionBegin(event.getHttpServletRequest().getSession());
             }
           }
         }
@@ -65,7 +70,7 @@ public class WebsocketServlet extends HttpServlet implements HttpEventServlet {
         }
         break;
       case END:
-        notifyListeners(event);
+        notifyMessageReceived(event);
         break;
       case ERROR:
         event.close();
@@ -77,40 +82,100 @@ public class WebsocketServlet extends HttpServlet implements HttpEventServlet {
         final BufferColor color = getSessionBufferEntry(event);
         if (color == null) break;
 
-        masterBuffer.write(is, color);
+        masterReadBuffer.write(is, color);
         break;
 
       case TIMEOUT:
 
         event.resume();
         break;
-      case WRITE:
-        break;
+
     }
   }
 
-  void registerListener(final WebsocketFrameListener listener) {
-    frameListeners.add(listener);
+  protected abstract void notifyConnectionBegin(final HttpSession session) throws IOException;
+
+  protected abstract void handleReceivedEvent(HttpEvent event, String text) throws IOException;
+
+  protected void writeToSocket(final HttpSession session, final String text) throws IOException {
+    final OutputStream outputStream = (OutputStream) session.getAttribute(SESSION_WRITE_STREAM_KEY);
+    if (outputStream != null) {
+      outputStream.write(text.getBytes());
+    }
   }
 
-  private void notifyListeners(final HttpEvent event) throws IOException {
+  private void notifyMessageReceived(final HttpEvent event) throws IOException {
     final BufferColor color = getSessionBufferEntry(event);
     if (color != null) {
-      for (WebsocketFrameListener listener : frameListeners) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        masterBuffer.read(outputStream, color);
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      masterReadBuffer.read(outputStream, color);
 
-        listener.handleReceivedEvent(event, new String(outputStream.toByteArray()));
-      }
+      handleReceivedEvent(event, new String(outputStream.toByteArray()));
     }
   }
 
-  private static void createSessionBufferEntry(HttpEvent event) {
-    event.getHttpServletRequest().getSession()
-            .setAttribute(SESSION_READ_BUFFER_KEY, BufferColor.getNewColor());
+  private static void createSessionBufferEntry(HttpEvent event) throws IOException {
+    final HttpSession session = event.getHttpServletRequest().getSession();
+
+    session.setAttribute(SESSION_READ_BUFFER_KEY, BufferColor.getNewColor());
+    session.setAttribute(SESSION_WRITE_STREAM_KEY, event.getHttpServletResponse().getOutputStream());
   }
 
   public static BufferColor getSessionBufferEntry(HttpEvent event) {
-    return (BufferColor) event.getHttpServletRequest().getSession().getAttribute(SESSION_READ_BUFFER_KEY);
+    return getSessionBufferEntry(event.getHttpServletRequest().getSession());
+  }
+
+  public static BufferColor getSessionBufferEntry(HttpSession session) {
+    return (BufferColor) session.getAttribute(SESSION_READ_BUFFER_KEY);
+  }
+
+  @Override
+  protected final void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.doGet(req, resp);
+  }
+
+  @Override
+  protected final long getLastModified(HttpServletRequest req) {
+    return super.getLastModified(req);
+  }
+
+  @Override
+  protected final void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.doHead(req, resp);
+  }
+
+  @Override
+  protected final void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.doPost(req, resp);
+  }
+
+  @Override
+  protected final void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.doPut(req, resp);
+  }
+
+  @Override
+  protected final void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.doDelete(req, resp);
+  }
+
+  @Override
+  protected final void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.doOptions(req, resp);
+  }
+
+  @Override
+  protected final void doTrace(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.doTrace(req, resp);
+  }
+
+  @Override
+  protected final void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    super.service(req, resp);
+  }
+
+  @Override
+  public final void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
+    super.service(req, res);
   }
 }
