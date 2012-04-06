@@ -59,10 +59,10 @@ public class Ietf07Handshake extends Handshake {
       final MessageDigest digest = MessageDigest.getInstance(getHashAlgorithm());
       digest.update(concat.getBytes("UTF-8"));
       final String result = Base64.encodeBase64String(digest.digest()).trim();
-
-      System.out.println("Browser Key: '" + nonceBase64 + "'");
-      System.out.println("Concat     : '" + concat + "'");
-      System.out.println("Result     : '" + result + "'");
+//
+//      System.out.println("Browser Key: '" + nonceBase64 + "'");
+//      System.out.println("Concat     : '" + concat + "'");
+//      System.out.println("Result     : '" + result + "'");
 
       return result;
     }
