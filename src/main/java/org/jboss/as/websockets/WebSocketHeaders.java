@@ -10,8 +10,9 @@ public enum WebSocketHeaders {
   SEC_WEBSOCKET_KEY("Sec-WebSocket-Key"),
   SEC_WEBSOCKET_KEY1("Sec-WebSocket-Key1"),
   SEC_WEBSOCKET_KEY2("Sec-WebSocket-Key2"),
-  SEC_WEBSOCKET_ORIGIN("Sec-WebSocket-Location"),
-  SEC_WEBSOCKET_LOCATION("Sec-WebSocket-Origin"),
+  SEC_WEBSOCKET_LOCATION("Sec-WebSocket-Location"),
+  ORIGIN("Origin"),
+  SEC_WEBSOCKET_ORIGIN("Sec-WebSocket-Origin"),
   SEC_WEBSOCKET_PROTOCOL("Sec-WebSocket-Protocol"),
   SEC_WEBSOCKET_VERSION("Sec-WebSocket-Version"),
   SEC_WEBSOCKET_ACCEPT("Sec-WebSocket-Accept");

@@ -3,6 +3,7 @@ package org.jboss.as.websockets.protocol.ietf07;
 
 import com.sun.xml.internal.fastinfoset.algorithm.IEEE754FloatingPointEncodingAlgorithm;
 import org.jboss.as.websockets.Handshake;
+import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
 import org.jboss.as.websockets.util.Base64;
 import org.jboss.servlet.http.HttpEvent;
@@ -30,6 +31,11 @@ public class Ietf07Handshake extends Handshake {
 
   public Ietf07Handshake() {
     this("7");
+  }
+
+  @Override
+  public WebSocket getWebSocket(HttpEvent event) throws IOException{
+    return Hybi07Socket.from(event);
   }
 
   @Override

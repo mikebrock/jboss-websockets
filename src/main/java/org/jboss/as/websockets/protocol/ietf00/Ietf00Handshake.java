@@ -1,6 +1,7 @@
 package org.jboss.as.websockets.protocol.ietf00;
 
 import org.jboss.as.websockets.Handshake;
+import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
 import org.jboss.servlet.http.HttpEvent;
 
@@ -12,7 +13,6 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_KEY;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_KEY1;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_KEY2;
 
@@ -30,21 +30,29 @@ public class Ietf00Handshake extends Handshake {
   }
 
   @Override
+  public WebSocket getWebSocket(HttpEvent event) throws IOException {
+    return Hybi00Socket.from(event);
+  }
+
+  @Override
   public void generateResponse(HttpEvent event) throws IOException {
     final HttpServletRequest request = event.getHttpServletRequest();
     final HttpServletResponse response = event.getHttpServletResponse();
 
-    WebSocketHeaders.SEC_WEBSOCKET_ORIGIN.copy(request, response);
+    if (WebSocketHeaders.ORIGIN.isIn(request)) {
+      WebSocketHeaders.SEC_WEBSOCKET_ORIGIN.set(response, WebSocketHeaders.ORIGIN.get(request));
+    }
+
+    final String origin = "ws://" + request.getHeader("Host") + request.getRequestURI();
+    WebSocketHeaders.SEC_WEBSOCKET_LOCATION.set(response, origin);
 
     // Calculate the answer of the challenge.
-    final String key1 = SEC_WEBSOCKET_KEY1.get(request);
-    final String key2 = SEC_WEBSOCKET_KEY2.get(request);
+    final String key1 = SEC_WEBSOCKET_KEY1.get(request).trim();
+    final String key2 = SEC_WEBSOCKET_KEY2.get(request).trim();
     final byte[] key3 = new byte[8];
 
     final InputStream inputStream = request.getInputStream();
-    for (int i = 0; i < 8; i++) {
-      key3[i] = (byte) inputStream.read();
-    }
+    inputStream.read(key3);
 
     final byte[] solution = solve(key1, key2, key3);
 

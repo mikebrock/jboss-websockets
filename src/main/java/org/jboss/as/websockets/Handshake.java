@@ -35,6 +35,8 @@ public abstract class Handshake {
     return "ws://" + request.getHeader("Host") + request.getRequestURI();
   }
 
+  public abstract WebSocket getWebSocket(HttpEvent event) throws IOException;
+
   public abstract boolean matches(HttpServletRequest request);
 
   public abstract void generateResponse(HttpEvent event) throws IOException;

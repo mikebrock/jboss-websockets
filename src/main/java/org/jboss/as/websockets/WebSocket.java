@@ -13,4 +13,12 @@ public interface WebSocket {
    * @throws IOException
    */
   public void writeTextFrame(String text) throws IOException;
+
+  /**
+   * Read a single text frame -- if available.
+   *
+   * @return the UTF-8 text payload string.
+   * @throws IOException
+   */
+  public String readTextFrame() throws IOException;
 }
