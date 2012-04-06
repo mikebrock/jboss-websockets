@@ -37,7 +37,7 @@ public class Ietf00Handshake extends Handshake {
     WebSocketHeaders.SEC_WEBSOCKET_ORIGIN.copy(request, response);
 
     // Calculate the answer of the challenge.
-    final String key1 = SEC_WEBSOCKET_KEY.get(request);
+    final String key1 = SEC_WEBSOCKET_KEY1.get(request);
     final String key2 = SEC_WEBSOCKET_KEY2.get(request);
     final byte[] key3 = new byte[8];
 
