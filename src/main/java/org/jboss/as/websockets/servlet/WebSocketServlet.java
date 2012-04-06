@@ -30,10 +30,10 @@ import java.util.List;
  *
  * @author Mike Brock
  */
-public abstract class WebSocketServletA extends HttpServlet implements HttpEventServlet {
+public abstract class WebSocketServlet extends HttpServlet implements HttpEventServlet {
   private static final List<Handshake> websocketHandshakes;
 
-  private static final Logger log = LoggerFactory.getLogger(WebSocketServletA.class);
+  private static final Logger log = LoggerFactory.getLogger(WebSocketServlet.class);
 
   static {
     final List<Handshake> handshakeList = new ArrayList<Handshake>();
