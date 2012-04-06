@@ -29,7 +29,7 @@ as you normally would, and that servlet mapping will become the upgradable WebSo
 Example Implementation:
 
     @WebServlet("/websocket/")
-    public class MyWebSocketServlet extends WebsocketServlet {
+    public class MyWebSocketServlet extends WebSocketServlet {
 
       @Override
       protected void onSocketOpened(HttpEvent event, WebSocket socket) throws IOException {
@@ -42,7 +42,8 @@ Example Implementation:
       }
 
       @Override
-      protected void onReceivedTextFrame(HttpEvent event, final WebSocket socket, String text) throws IOException {
+      protected void onReceivedTextFrame(HttpEvent event, final WebSocket socket) throws IOException {
+        final String text = socket.readTextFrame();
         if ("Hello".equals(text)) {
           socket.writeTextFrame("Hey, there!");
         }
@@ -50,8 +51,14 @@ Example Implementation:
     }
 
 
-And, that's about it except for one point of errata: the session information is not automatically shared between
-the HTTP and the WebSocket session. So when an upgrade occurs, a new HttpSession will be opened. You will need to
-write your own code to associate the new session with the old session.
 
-Note that binary frames are not supported yet. Which is okay since no browsers actually support them yet. =)
+Errata:
+-------
+
+1. Ssession information is not automatically shared between the HTTP and the WebSocket session. So when an upgrade
+   occurs, a new HttpSession will be opened. You will need to write your own code to associate the new session with
+   the old session.
+
+2. Binary frames not supported.
+
+3. Only Hybi-07 and its variants are working.
