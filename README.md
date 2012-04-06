@@ -50,7 +50,7 @@ Example Implementation:
     }
 
 
-And, that's about it except for one point of eratta: the session information is not automatically shared between
+And, that's about it except for one point of errata: the session information is not automatically shared between
 the HTTP and the WebSocket session. So when an upgrade occurs, a new HttpSession will be opened. You will need to
 write your own code to associate the new session with the old session.
 
