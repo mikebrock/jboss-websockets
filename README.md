@@ -59,6 +59,6 @@ Errata:
    occurs, a new HttpSession will be opened. You will need to write your own code to associate the new session with
    the old session.
 
-2. Binary frames not supported.
+2. Binary frames not yet supported.
 
 3. Only Hybi-07 and its variants are working.
