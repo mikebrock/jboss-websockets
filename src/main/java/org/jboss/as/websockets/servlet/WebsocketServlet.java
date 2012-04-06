@@ -140,6 +140,17 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
       payloadLength = ((stream.read() & 0xFF) << 8) +
               (stream.read() & 0xFF);
     }
+    else if (payloadLength == 127) {
+      // ignore the first 4-bytes. We can't deal with 64-bit ints right now anyways.
+      stream.read();
+      stream.read();
+      stream.read();
+      stream.read();
+      payloadLength = ((stream.read() & 0xFF) << 24) +
+                      ((stream.read() & 0xFF) << 16) +
+                      ((stream.read() & 0xFF) << 8) +
+                      ((stream.read() & 0xFF));
+    }
 
     final int[] frameMaskingKey = new int[4];
 
@@ -204,11 +215,24 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
 
   private static void writeWebSocketFrame(final OutputStream stream, final String txt) throws IOException {
     byte[] strBytes = txt.getBytes("UTF-8");
-    boolean big = strBytes.length > 125;
 
     stream.write(-127);
-    if (big) {
-      stream.write(-2);
+    if (strBytes.length > Short.MAX_VALUE) {
+      stream.write(-1); // unsigned 7-bit int of value 127 -- leading bit indicates masking.
+
+      // pad the 64-bit number -- Java doesn't support 64-bit ints, and I'm relatively sure no payload
+      // will require that sort of frame size in the real world.
+      stream.write(0);
+      stream.write(0);
+      stream.write(0);
+      stream.write(0);
+      stream.write((strBytes.length & 0xFF) << 24);
+      stream.write((strBytes.length & 0xFF) << 16);
+      stream.write((strBytes.length & 0xFF) << 8);
+      stream.write((strBytes.length & 0xFF));
+    }
+    else if (strBytes.length > 125) {
+      stream.write(-2); // unsigned 7-bit int of value 126 -- leading bit indicates masking.
       stream.write(((strBytes.length >> 8) & 0xFF));
       stream.write(((strBytes.length) & 0xFF));
     }
@@ -216,8 +240,21 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
       stream.write(-128 | (strBytes.length & 127));
     }
 
-    byte[] mask = {(byte) random.nextInt(127), (byte) random.nextInt(127),
-            (byte) random.nextInt(127), (byte) random.nextInt(127)};
+    /**
+     * From IETF Websockets Protocol Specification:
+     *
+     *   The masking key is a 32-bit value chosen at random by the client.
+     The masking key MUST be derived from a strong source of entropy, and
+     the masking key for a given frame MUST NOT make it simple for a
+     server to predict the masking key for a subsequent frame.  RFC 4086
+     [RFC4086] discusses what entails a suitable source of entropy for
+     security-sensitive applications.
+     *
+     */
+
+
+    final byte[] mask = new byte[4];
+    random.nextBytes(mask);
 
     stream.write(mask[0]);
     stream.write(mask[1]);
