@@ -1,6 +1,7 @@
 package org.jboss.as.websockets.protocol.ietf07;
 
 
+import com.sun.xml.internal.fastinfoset.algorithm.IEEE754FloatingPointEncodingAlgorithm;
 import org.jboss.as.websockets.Handshake;
 import org.jboss.as.websockets.WebSocketHeaders;
 import org.jboss.as.websockets.util.Base64;
@@ -9,6 +10,7 @@ import org.jboss.servlet.http.HttpEvent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -51,16 +53,24 @@ public class Ietf07Handshake extends Handshake {
     WebSocketHeaders.SEC_WEBSOCKET_ACCEPT.set(response, solution);
   }
 
-  private String solve(final String nonceBase64) {
-    final String concat = nonceBase64 + getMagicNumber();
-
+  public String solve(final String nonceBase64) {
     try {
+      final String concat = nonceBase64.trim().concat(getMagicNumber());
       final MessageDigest digest = MessageDigest.getInstance(getHashAlgorithm());
-      digest.update(concat.getBytes());
-      return Base64.encode(digest.digest());
+      digest.update(concat.getBytes("UTF-8"));
+      final String result = Base64.encodeBase64String(digest.digest()).trim();
+
+      System.out.println("Browser Key: '" + nonceBase64 + "'");
+      System.out.println("Concat     : '" + concat + "'");
+      System.out.println("Result     : '" + result + "'");
+
+      return result;
     }
     catch (NoSuchAlgorithmException e) {
       throw new RuntimeException("error generating hash", e);
+    }
+    catch (UnsupportedEncodingException e) {
+      throw new RuntimeException("could not get UTF-8 bytes");
     }
   }
 }
