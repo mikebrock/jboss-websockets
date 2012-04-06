@@ -202,11 +202,6 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
     }
   }
 
-  // we'll just statically cache the byte mask on startup. there's no real security in this.
-  private static final byte[] mask
-          = {(byte) random.nextInt(127), (byte) random.nextInt(127),
-          (byte) random.nextInt(127), (byte) random.nextInt(127)};
-
   private static void writeWebSocketFrame(final OutputStream stream, final String txt) throws IOException {
     byte[] strBytes = txt.getBytes("UTF-8");
     boolean big = strBytes.length > 125;
@@ -220,6 +215,9 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
     else {
       stream.write(-128 | (strBytes.length & 127));
     }
+
+    byte[] mask = {(byte) random.nextInt(127), (byte) random.nextInt(127),
+            (byte) random.nextInt(127), (byte) random.nextInt(127)};
 
     stream.write(mask[0]);
     stream.write(mask[1]);
@@ -305,7 +303,7 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
   /**
    * Called when a new websocket is opened.
    *
-   * @param event The HttpEvent associated with the WebSocket Upgrade.
+   * @param event  The HttpEvent associated with the WebSocket Upgrade.
    * @param socket A reference to the WebSocket writer interface
    * @throws IOException
    */
@@ -322,9 +320,9 @@ public abstract class WebsocketServlet extends HttpServlet implements HttpEventS
   /**
    * Called when a new text frame is received.
    *
-   * @param event The HttpEvent associated with <em>original</em> WebSocket Upgrade.
+   * @param event  The HttpEvent associated with <em>original</em> WebSocket Upgrade.
    * @param socket A reference to the WebSocket writer interface associated with this socket.
-   * @param text the String data from the received websocket payload.
+   * @param text   the String data from the received websocket payload.
    * @throws IOException
    */
   protected abstract void onReceivedTextFrame(final HttpEvent event, final WebSocket socket, final String text) throws IOException;
