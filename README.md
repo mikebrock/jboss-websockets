@@ -61,5 +61,9 @@ Errata:
 
 2. Binary frames not yet supported.
 
-3. Only Hybi-07 and its variants (particularly Hybi-13) are working. Confirmed working browsers: Chrome v18, FireFox v11. 
+3. Message fragmentation is not yet supported.
+
+4. Only Hybi-07 and its variants (particularly Hybi-13 and RFC 6455) are working -- minus the above missing features. 
+   Confirmed working browsers: Chrome v18, FireFox v11. 
    Confirmed broken browsers: Safari 5.1, MobileSafari on iOS 5.1 (both use Hybi-00).
+
