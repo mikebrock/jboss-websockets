@@ -68,11 +68,11 @@ Errata:
 
 Known Compatibility
 ----------------------
-Confirmed Working:
-   - Chrome 18
-   - Firefox 11
+- Confirmed Working:
+ - Chrome 18
+ - Firefox 11
    
-Confirmed Broken:
-   - All versions of Safari (still uses Hybi-00)
-   - All versions of MobileSafari
+- Confirmed Broken:
+ - All versions of Safari (still uses Hybi-00)
+ - All versions of MobileSafari
 
