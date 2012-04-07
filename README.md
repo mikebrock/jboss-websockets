@@ -76,3 +76,7 @@ Known Compatibility
  - All versions of Safari (still uses Hybi-00)
  - All versions of MobileSafari
 
+Want to Contribute?
+-------------------
+
+Just fork. 
