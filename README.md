@@ -55,7 +55,7 @@ Example Implementation:
 Errata:
 -------
 
-1. Ssession information is not automatically shared between the HTTP and the WebSocket session. So when an upgrade
+1. Session information is not automatically shared between the HTTP and the WebSocket session. So when an upgrade
    occurs, a new HttpSession will be opened. You will need to write your own code to associate the new session with
    the old session.
 
