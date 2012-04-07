@@ -63,7 +63,20 @@ Errata:
 
 3. Message fragmentation is not yet supported.
 
-4. Only Hybi-07 and its variants (particularly Hybi-13 and RFC 6455) are working -- minus the above missing features. 
-   Confirmed working browsers: Chrome v18, FireFox v11. 
+4. Only Hybi-07 and its variants (particularly Hybi-13 and the final spec RFC 6455) are working -- minus the above 
+   missing features. 
+
+Known Compatibility
+----------------------
+Confirmed Working:
+   - Chrome 18
+   - Firefox 11
+   
+Confirmed Broken:
+   - All versions of Safari (still uses Hybi-00)
+   - All versions of MobileSafari
+
+
+Confirmed working browsers: Chrome v18, FireFox v11. 
    Confirmed broken browsers: Safari 5.1, MobileSafari on iOS 5.1 (both use Hybi-00).
 
