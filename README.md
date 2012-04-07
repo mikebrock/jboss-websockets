@@ -76,7 +76,3 @@ Confirmed Broken:
    - All versions of Safari (still uses Hybi-00)
    - All versions of MobileSafari
 
-
-Confirmed working browsers: Chrome v18, FireFox v11. 
-   Confirmed broken browsers: Safari 5.1, MobileSafari on iOS 5.1 (both use Hybi-00).
-
