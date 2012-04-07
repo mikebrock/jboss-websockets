@@ -10,6 +10,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
+ * The Hybi-00 Framing Protocol implementation.
+ *
+ * @see Hybi00Handshake
  * @author Mike Brock
  */
 public class Hybi00Socket implements WebSocket {

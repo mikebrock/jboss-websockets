@@ -1,7 +1,7 @@
 package org.jboss.as.websockets.protocol.ietf13;
 
 import org.jboss.as.websockets.WebSocketHeaders;
-import org.jboss.as.websockets.protocol.ietf07.Ietf07Handshake;
+import org.jboss.as.websockets.protocol.ietf07.Hybi07Handshake;
 import org.jboss.servlet.http.HttpEvent;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,10 +14,12 @@ import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_LOCATION;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL;
 
 /**
+ * The handshaking protocol implementation for Hybi-13.
+ *
  * @author Mike Brock
  */
-public class Ietf13Handshake extends Ietf07Handshake {
-  public Ietf13Handshake() {
+public class Hybi13Handshake extends Hybi07Handshake {
+  public Hybi13Handshake() {
     super("13");
   }
 

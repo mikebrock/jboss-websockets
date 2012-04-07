@@ -2,10 +2,11 @@ package org.jboss.as.websockets.servlet;
 
 import org.jboss.as.websockets.Handshake;
 import org.jboss.as.websockets.WebSocket;
-import org.jboss.as.websockets.protocol.ietf00.Ietf00Handshake;
-import org.jboss.as.websockets.protocol.ietf07.Ietf07Handshake;
-import org.jboss.as.websockets.protocol.ietf08.Ietf08Handshake;
-import org.jboss.as.websockets.protocol.ietf13.Ietf13Handshake;
+import org.jboss.as.websockets.WebSocketHeaders;
+import org.jboss.as.websockets.protocol.ietf00.Hybi00Handshake;
+import org.jboss.as.websockets.protocol.ietf07.Hybi07Handshake;
+import org.jboss.as.websockets.protocol.ietf08.Hybi08Handshake;
+import org.jboss.as.websockets.protocol.ietf13.Hybi13Handshake;
 import org.jboss.servlet.http.HttpEvent;
 import org.jboss.servlet.http.HttpEventServlet;
 import org.jboss.servlet.http.UpgradableHttpServletResponse;
@@ -21,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,21 +37,29 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
   private static final Logger log = LoggerFactory.getLogger(WebSocketServlet.class);
 
+  private String protocolName;
+
   static {
     final List<Handshake> handshakeList = new ArrayList<Handshake>();
-    handshakeList.add(new Ietf00Handshake());
-    handshakeList.add(new Ietf07Handshake());
-    handshakeList.add(new Ietf08Handshake());
-    handshakeList.add(new Ietf13Handshake());
+    handshakeList.add(new Hybi00Handshake());
+    handshakeList.add(new Hybi07Handshake());
+    handshakeList.add(new Hybi08Handshake());
+    handshakeList.add(new Hybi13Handshake());
 
     websocketHandshakes = Collections.unmodifiableList(handshakeList);
   }
 
+  /**
+   * An attribute name to stuff WebSocket handles into the sessions with.
+   */
   private static final String SESSION_WEBSOCKET_HANDLE = "JBoss:Experimental:Websocket:Handle";
 
-  private static void setStandardUpgradeHeaders(final HttpServletResponse response) {
+  private void setStandardUpgradeHeaders(final HttpServletResponse response) {
     response.setHeader("Upgrade", "WebSocket");
     response.setHeader("Connection", "Upgrade");
+
+    if (protocolName != null)
+      WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, protocolName);
 
   }
 
@@ -58,48 +68,63 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
     final HttpServletResponse response = event.getHttpServletResponse();
     final HttpSession session = request.getSession();
 
-    System.out.println(event);
-
     switch (event.getType()) {
       case BEGIN:
         event.setTimeout(20000);
 
-        log.info("Begin Handshake");
+        log.debug("Begin Websocket Handshake");
 
         if (response instanceof UpgradableHttpServletResponse) {
           for (Handshake handshake : websocketHandshakes) {
             if (handshake.matches(request)) {
-
-
-              log.info("Found a compatibile handshake: (Version:"
-                      + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
-              // do the handshake.
-              byte[] handShakeData = handshake.generateResponse(event);
-
               setStandardUpgradeHeaders(response);
 
-              final WebSocket webSocket = handshake.getWebSocket(event);
-              log.info("Using WebSocked implementation: " + webSocket.getClass().getName());
+              log.debug("Found a compatible handshake: (Version:"
+                      + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
 
+              /**
+               * Generate the server handshake response -- setting the necessary headers and also capturing
+               * any data bound for the body of the response.
+               */
+              final byte[] handShakeData = handshake.generateResponse(event);
+
+              /**
+               * Obtain an WebSocket instance from the handshaker.
+               */
+              final WebSocket webSocket = handshake.getWebSocket(event);
+
+              log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
+
+              /**
+               * Stuff the WebSocket into the session itself so we can re-associate it when new events fire.
+               * This may not a good solution for clustered situations. But then again, the socket is persistent
+               * and should generally be stuck to a server. But then again, if that's true, we can probably track it
+               * in some data structure outside the session. =)
+               *
+               * TDDO: Revisit this.
+               */
               session.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
-              onSocketOpened(event, webSocket);
 
+              /**
+               * If the handshaker returned data for the response body, we render it now.
+               *
+               * NOTE: This is needed for Hybi-00 and doesn't work because JBossWeb is flushing this data into the
+               *       abyss.
+               */
+              if (handShakeData.length > 0) {
+                log.info("Sending handshake data: " + Arrays.toString(handShakeData));
+                response.getOutputStream().write(handShakeData);
+                response.getOutputStream().flush();
+              }
 
+              /**
+               * Transition the request from HTTP to a persistent socket.
+               */
               ((UpgradableHttpServletResponse) response).sendUpgrade();
 
-
-              if (handShakeData.length > 0 && event.isWriteReady()) {
-                 response.getOutputStream().write(handShakeData);
-              }
-              else {
-                log.warn("Couldn't write handshake data");
-              }
-
+              onSocketOpened(event, webSocket);
               log.info("WebSocket is open.");
-              response.getOutputStream().write("THIS IS A TEST ********C1010101010101**********".getBytes());
-
-
             }
           }
         }
@@ -131,6 +156,10 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
     }
   }
 
+
+  //
+  // Override all the normal HTTP methods and make them final so they can't be inherited by users of this servlet.
+  //
 
   @Override
   protected final void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -180,6 +209,19 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   @Override
   public final void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
     super.service(req, res);
+  }
+
+  //
+  //  Finish overriding methods
+  //
+
+
+  /**
+   * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation.
+   * @param protocol
+   */
+  protected void setProtocolName(final String protocol) {
+    this.protocolName = protocol;
   }
 
   /**

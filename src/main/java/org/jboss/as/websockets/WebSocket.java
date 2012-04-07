@@ -3,6 +3,10 @@ package org.jboss.as.websockets;
 import java.io.IOException;
 
 /**
+ * Represents a handle to a single WebSocket connection. It has reader and writer methods to get data in and out.
+ *
+ * TODO: Implement support for binary frames.
+ *
  * @author Mike Brock
  */
 public interface WebSocket {

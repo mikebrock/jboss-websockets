@@ -22,8 +22,8 @@ import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_KEY2;
 /**
  * @author Mike Brock
  */
-public class Ietf00Handshake extends Handshake {
-  public Ietf00Handshake() {
+public class Hybi00Handshake extends Handshake {
+  public Hybi00Handshake() {
     super("0", "MD5", null);
   }
 

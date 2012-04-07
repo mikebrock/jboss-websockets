@@ -1,7 +1,6 @@
 package org.jboss.as.websockets.protocol.ietf07;
 
 
-import com.sun.xml.internal.fastinfoset.algorithm.IEEE754FloatingPointEncodingAlgorithm;
 import org.jboss.as.websockets.Handshake;
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
@@ -23,14 +22,16 @@ import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_VERSION;
 
 /**
+ * The handshaking protocol implementation for Hybi-07.
+ *
  * @author Mike Brock
  */
-public class Ietf07Handshake extends Handshake {
-  protected Ietf07Handshake(final String version) {
+public class Hybi07Handshake extends Handshake {
+  protected Hybi07Handshake(final String version) {
     super(version, "SHA1", "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
   }
 
-  public Ietf07Handshake() {
+  public Hybi07Handshake() {
     this("7");
   }
 
