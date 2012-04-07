@@ -6,10 +6,15 @@ Runtime connector (APR). This limitation will be addressed in a future version o
 
 To Configure APR in JBoss AS 7.1.x:
 
- 1. In domain/configuration/domain.xml ->
-     Change line : &lt;subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="false"&gt;
-              to : &lt;subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="true"&gt;
+ 1. In domain/configuration/domain.xml: Change Line:
 
+         <subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="false">           
+
+    to:
+
+         <subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="true">
+
+ 
  2. If you are on OS X you may need to tweak JAVA_OPTS a bit:
     - export JAVA_OPTS="-d32 -Xmx512m -Djboss.modules.system.pkgs=sun.nio.ch -Djava.library.path=$JBOSS_HOME/bin/native"
        - The native APR connector binaries for OS X are only 32-bit
@@ -55,7 +60,7 @@ Example Implementation:
 Errata:
 -------
 
-1. Ssession information is not automatically shared between the HTTP and the WebSocket session. So when an upgrade
+1. Session information is not automatically shared between the HTTP and the WebSocket session. So when an upgrade
    occurs, a new HttpSession will be opened. You will need to write your own code to associate the new session with
    the old session.
 
