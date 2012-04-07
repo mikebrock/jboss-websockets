@@ -84,8 +84,8 @@ public class Hybi07Socket implements WebSocket {
       frameMaskingKey[3] = inputStream.read();
     }
 
-    System.out.println("WS_FRAME(opcode=" + opcode + ";frameMasked=" + frameMasked + ";payloadLength="
-            + payloadLength + ";frameMask=" + Arrays.toString(frameMaskingKey) + ")");
+//    System.out.println("WS_FRAME(opcode=" + opcode + ";frameMasked=" + frameMasked + ";payloadLength="
+//            + payloadLength + ";frameMask=" + Arrays.toString(frameMaskingKey) + ")");
 
 
     final StringBuilder payloadBuffer = new StringBuilder(payloadLength);
@@ -122,7 +122,7 @@ public class Hybi07Socket implements WebSocket {
 
     }
 
-    System.out.println("ReadTextFrame: <<" + payloadBuffer.toString() + ">>");
+  //  System.out.println("ReadTextFrame: <<" + payloadBuffer.toString() + ">>");
 
     return payloadBuffer.toString();
   }
@@ -141,7 +141,7 @@ public class Hybi07Socket implements WebSocket {
   }
 
   private void _writeTextFrame(final String txt) throws IOException {
-    System.out.println("WriteTextFrame: <<" + txt + ">>");
+//    System.out.println("WriteTextFrame: <<" + txt + ">>");
 
     byte[] strBytes = txt.getBytes("UTF-8");
 
