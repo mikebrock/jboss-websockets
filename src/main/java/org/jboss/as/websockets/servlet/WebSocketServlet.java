@@ -113,7 +113,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
                *       abyss.
                */
               if (handShakeData.length > 0) {
-                log.info("Sending handshake data: " + Arrays.toString(handShakeData));
                 response.getOutputStream().write(handShakeData);
                 response.getOutputStream().flush();
               }
@@ -124,7 +123,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
               ((UpgradableHttpServletResponse) response).sendUpgrade();
 
               onSocketOpened(event, webSocket);
-              log.info("WebSocket is open.");
             }
           }
         }

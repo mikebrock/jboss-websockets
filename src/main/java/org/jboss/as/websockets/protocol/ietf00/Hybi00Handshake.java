@@ -81,9 +81,6 @@ public class Hybi00Handshake extends Handshake {
     try {
       final MessageDigest digest = MessageDigest.getInstance(hashAlgorithm);
       final byte[] solutionMD5 = digest.digest(solution);
-
-      System.out.println("calculates solution to challenge: " + Arrays.toString(solutionMD5));
-
       return solutionMD5;
     }
     catch (NoSuchAlgorithmException e) {
