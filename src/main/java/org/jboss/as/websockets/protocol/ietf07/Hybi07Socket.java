@@ -29,13 +29,13 @@ public class Hybi07Socket implements WebSocket {
 
   public static WebSocket from(final HttpEvent event) throws IOException {
     return new Hybi07Socket(
-             event,
-             event.getHttpServletRequest().getInputStream(),
-             event.getHttpServletResponse().getOutputStream());
+            event,
+            event.getHttpServletRequest().getInputStream(),
+            event.getHttpServletResponse().getOutputStream());
   }
 
   private static final byte FRAME_FIN = Byte.MIN_VALUE;
-  private static final byte FRAME_OPCODE = 0x0F;
+  private static final byte FRAME_OPCODE = 127;
   private static final byte FRAME_MASKED = Byte.MIN_VALUE;
   private static final byte FRAME_LENGTH = 127;
 
@@ -46,8 +46,10 @@ public class Hybi07Socket implements WebSocket {
   private static final int OPCODE_PING = 4;
   private static final int OPCODE_PONG = 5;
 
+  @SuppressWarnings("ResultOfMethodCallIgnored")
   private String _readTextFrame() throws IOException {
-    final StringBuilder payloadBuffer = new StringBuilder();
+
+    //TODO: check the first bit?
     int b = inputStream.read();
 
     int opcode = (b & FRAME_OPCODE);
@@ -85,6 +87,8 @@ public class Hybi07Socket implements WebSocket {
     System.out.println("WS_FRAME(opcode=" + opcode + ";frameMasked=" + frameMasked + ";payloadLength="
             + payloadLength + ";frameMask=" + Arrays.toString(frameMaskingKey) + ")");
 
+
+    final StringBuilder payloadBuffer = new StringBuilder(payloadLength);
     switch (opcode) {
       case OPCODE_TEXT:
         int read = 0;
@@ -174,10 +178,7 @@ public class Hybi07Socket implements WebSocket {
      server to predict the masking key for a subsequent frame.  RFC 4086
      [RFC4086] discusses what entails a suitable source of entropy for
      security-sensitive applications.
-     *
      */
-
-
     final byte[] mask = new byte[4];
     random.nextBytes(mask);
 
@@ -194,7 +195,6 @@ public class Hybi07Socket implements WebSocket {
 
     outputStream.flush();
   }
-
 
   public void writeTextFrame(String text) throws IOException {
     _writeTextFrame(text);

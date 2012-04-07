@@ -15,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import static org.jboss.as.websockets.WebSocketHeaders.ORIGIN;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_KEY;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_LOCATION;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_ORIGIN;
@@ -34,7 +35,7 @@ public class Ietf07Handshake extends Handshake {
   }
 
   @Override
-  public WebSocket getWebSocket(HttpEvent event) throws IOException{
+  public WebSocket getWebSocket(HttpEvent event) throws IOException {
     return Hybi07Socket.from(event);
   }
 
@@ -44,11 +45,14 @@ public class Ietf07Handshake extends Handshake {
   }
 
   @Override
-  public void generateResponse(HttpEvent event) throws IOException {
+  public byte[] generateResponse(HttpEvent event) throws IOException {
     final HttpServletRequest request = event.getHttpServletRequest();
     final HttpServletResponse response = event.getHttpServletResponse();
 
-    SEC_WEBSOCKET_ORIGIN.copy(request, response);
+    if (ORIGIN.isIn(request)) {
+      SEC_WEBSOCKET_ORIGIN.set(response, ORIGIN.get(request));
+    }
+
     SEC_WEBSOCKET_PROTOCOL.copy(request, response);
 
     SEC_WEBSOCKET_LOCATION.set(response, getWebSocketLocation(request));
@@ -57,6 +61,8 @@ public class Ietf07Handshake extends Handshake {
     final String solution = solve(key);
 
     WebSocketHeaders.SEC_WEBSOCKET_ACCEPT.set(response, solution);
+
+    return new byte[0];
   }
 
   public String solve(final String nonceBase64) {

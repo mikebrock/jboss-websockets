@@ -58,6 +58,8 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
     final HttpServletResponse response = event.getHttpServletResponse();
     final HttpSession session = request.getSession();
 
+    System.out.println(event);
+
     switch (event.getType()) {
       case BEGIN:
         event.setTimeout(20000);
@@ -67,24 +69,37 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
         if (response instanceof UpgradableHttpServletResponse) {
           for (Handshake handshake : websocketHandshakes) {
             if (handshake.matches(request)) {
+
+
               log.info("Found a compatibile handshake: (Version:"
                       + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
               // do the handshake.
-              handshake.generateResponse(event);
+              byte[] handShakeData = handshake.generateResponse(event);
 
               setStandardUpgradeHeaders(response);
-
-              // Not sure what this actually does, but Remy told me to call it -- Mike
-              // TODO: look at what it actually does.
-              ((UpgradableHttpServletResponse) response).sendUpgrade();
 
               final WebSocket webSocket = handshake.getWebSocket(event);
               log.info("Using WebSocked implementation: " + webSocket.getClass().getName());
 
               session.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
-              log.info("WebSocket is open.");
               onSocketOpened(event, webSocket);
+
+
+              ((UpgradableHttpServletResponse) response).sendUpgrade();
+
+
+              if (handShakeData.length > 0 && event.isWriteReady()) {
+                 response.getOutputStream().write(handShakeData);
+              }
+              else {
+                log.warn("Couldn't write handshake data");
+              }
+
+              log.info("WebSocket is open.");
+              response.getOutputStream().write("THIS IS A TEST ********C1010101010101**********".getBytes());
+
+
             }
           }
         }

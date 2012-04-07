@@ -39,5 +39,5 @@ public abstract class Handshake {
 
   public abstract boolean matches(HttpServletRequest request);
 
-  public abstract void generateResponse(HttpEvent event) throws IOException;
+  public abstract byte[] generateResponse(HttpEvent event) throws IOException;
 }
