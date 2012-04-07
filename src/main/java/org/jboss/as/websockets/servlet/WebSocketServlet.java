@@ -140,7 +140,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
       case EVENT:
       case READ:
         while (event.isReadReady()) {
-          log.info("Text Frame Ready to Read");
           onReceivedTextFrame(event, (WebSocket) session.getAttribute(SESSION_WEBSOCKET_HANDLE));
         }
         break;
