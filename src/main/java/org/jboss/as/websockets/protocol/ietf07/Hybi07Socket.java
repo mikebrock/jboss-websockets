@@ -49,15 +49,12 @@ public class Hybi07Socket extends AbstractWebSocket {
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
   private String _readTextFrame() throws IOException {
-
     //TODO: check the first bit?
     int b = inputStream.read();
-
-    int opcode = (b & FRAME_OPCODE);
+    final int opcode = (b & FRAME_OPCODE);
 
     b = inputStream.read();
-
-    boolean frameMasked = (b & FRAME_MASKED) != 0;
+    final boolean frameMasked = (b & FRAME_MASKED) != 0;
 
     int payloadLength = (b & FRAME_LENGTH);
     if (payloadLength == 126) {
