@@ -60,15 +60,11 @@ Example Implementation:
 Errata:
 -------
 
-1. Session information is not automatically shared between the HTTP and the WebSocket session. So when an upgrade
-   occurs, a new HttpSession will be opened. You will need to write your own code to associate the new session with
-   the old session.
+1. Binary frames not yet supported.
 
-2. Binary frames not yet supported.
+2. Message fragmentation is not yet supported.
 
-3. Message fragmentation is not yet supported.
-
-4. Only Hybi-07 and its variants (particularly Hybi-13 and the final spec RFC 6455) are working -- minus the above 
+3. Only Hybi-07 and its variants (particularly Hybi-13 and the final spec RFC 6455) are working -- minus the above 
    missing features. 
 
 Known Compatibility
