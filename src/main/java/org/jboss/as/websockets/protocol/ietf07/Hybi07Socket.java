@@ -1,5 +1,6 @@
 package org.jboss.as.websockets.protocol.ietf07;
 
+import org.jboss.as.websockets.AbstractWebSocket;
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.protocol.ietf00.Hybi00Socket;
 import org.jboss.servlet.http.HttpEvent;
@@ -16,7 +17,7 @@ import java.util.Arrays;
  *
  * @author Mike Brock
  */
-public class Hybi07Socket implements WebSocket {
+public class Hybi07Socket extends AbstractWebSocket {
   private final HttpEvent event;
   private final InputStream inputStream;
   private final OutputStream outputStream;

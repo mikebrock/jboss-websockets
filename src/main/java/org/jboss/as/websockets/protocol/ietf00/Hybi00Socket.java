@@ -1,5 +1,6 @@
 package org.jboss.as.websockets.protocol.ietf00;
 
+import org.jboss.as.websockets.AbstractWebSocket;
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.servlet.http.HttpEvent;
 import org.slf4j.Logger;
@@ -15,7 +16,7 @@ import java.io.OutputStream;
  * @see Hybi00Handshake
  * @author Mike Brock
  */
-public class Hybi00Socket implements WebSocket {
+public class Hybi00Socket extends AbstractWebSocket {
   private final HttpEvent event;
   private final InputStream inputStream;
   private final OutputStream outputStream;
@@ -46,6 +47,7 @@ public class Hybi00Socket implements WebSocket {
 
     System.out.println("WriteTextFrame:" + text);
   }
+
 
 
   @SuppressWarnings("ResultOfMethodCallIgnored")

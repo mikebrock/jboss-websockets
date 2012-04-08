@@ -41,10 +41,10 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
   static {
     final List<Handshake> handshakeList = new ArrayList<Handshake>();
-    handshakeList.add(new Hybi00Handshake());
+    handshakeList.add(new Hybi13Handshake());
     handshakeList.add(new Hybi07Handshake());
     handshakeList.add(new Hybi08Handshake());
-    handshakeList.add(new Hybi13Handshake());
+    handshakeList.add(new Hybi00Handshake());
 
     websocketHandshakes = Collections.unmodifiableList(handshakeList);
   }
@@ -66,7 +66,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   public final void event(final HttpEvent event) throws IOException, ServletException {
     final HttpServletRequest request = event.getHttpServletRequest();
     final HttpServletResponse response = event.getHttpServletResponse();
-    final HttpSession session = request.getSession();
 
     switch (event.getType()) {
       case BEGIN:
@@ -95,16 +94,8 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
               log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
 
-              /**
-               * Stuff the WebSocket into the session itself so we can re-associate it when new events fire.
-               * This may not a good solution for clustered situations. But then again, the socket is persistent
-               * and should generally be stuck to a server. But then again, if that's true, we can probably track it
-               * in some data structure outside the session. =)
-               *
-               * TDDO: Revisit this.
-               */
-              session.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
+              request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
               /**
                * If the handshaker returned data for the response body, we render it now.
@@ -138,7 +129,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
       case EVENT:
       case READ:
         while (event.isReadReady()) {
-          onReceivedTextFrame(event, (WebSocket) session.getAttribute(SESSION_WEBSOCKET_HANDLE));
+          onReceivedTextFrame(event, (WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
         }
         break;
 
@@ -215,6 +206,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
   /**
    * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation.
+   *
    * @param protocol
    */
   protected void setProtocolName(final String protocol) {
