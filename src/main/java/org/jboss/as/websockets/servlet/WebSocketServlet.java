@@ -145,11 +145,9 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
     }
   }
 
-
   //
   // Override all the normal HTTP methods and make them final so they can't be inherited by users of this servlet.
   //
-
   @Override
   protected final void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     super.doGet(req, resp);
@@ -199,11 +197,9 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   public final void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
     super.service(req, res);
   }
-
   //
   //  Finish overriding methods
   //
-
 
   /**
    * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation. This is
