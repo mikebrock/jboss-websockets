@@ -6,7 +6,7 @@ Runtime connector (APR). This limitation will be addressed in a future version o
 
 To Configure APR in JBoss AS 7.1.x:
 
- 1. In domain/configuration/domain.xml: Change Line:
+1. In domain/configuration/domain.xml: Change Line:
 
          <subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="false">           
 
@@ -14,13 +14,7 @@ To Configure APR in JBoss AS 7.1.x:
 
          <subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="true">
 
- 
- 2. If you are on OS X you may need to tweak JAVA_OPTS a bit:
-    - export JAVA_OPTS="-d32 -Xmx512m -Djboss.modules.system.pkgs=sun.nio.ch -Djava.library.path=$JBOSS_HOME/bin/native"
-       - The native APR connector binaries for OS X are only 32-bit
-       - The Mac JRE NIO libraries try to access sun.nio.ch.* classes, and JBoss Modules is angry about that.
-       - Add the bin/native dir to the JVM library search path. This assumes you've set $JBOSS_HOME. If not, just fully qualify path.
-
+2. Okay, done. 
 
 
 
