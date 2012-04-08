@@ -94,7 +94,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
               log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
 
-
               request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
               /**
@@ -112,6 +111,8 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
                * Transition the request from HTTP to a persistent socket.
                */
               ((UpgradableHttpServletResponse) response).sendUpgrade();
+
+              log.debug("Websocket opened for session: " + request.getSession().getId());
 
               onSocketOpened(event, webSocket);
             }
@@ -205,7 +206,8 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
 
   /**
-   * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation.
+   * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation. This is
+   * not thread-safe. It should only be set from the init() method of the servlet.
    *
    * @param protocol
    */

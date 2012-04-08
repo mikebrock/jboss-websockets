@@ -76,18 +76,11 @@ public class Hybi07Socket extends AbstractWebSocket {
               ((inputStream.read() & 0xFF));
     }
 
-    final int[] frameMaskingKey = new int[4];
+    final byte[] frameMaskingKey = new byte[4];
 
     if (frameMasked) {
-      frameMaskingKey[0] = inputStream.read();
-      frameMaskingKey[1] = inputStream.read();
-      frameMaskingKey[2] = inputStream.read();
-      frameMaskingKey[3] = inputStream.read();
+      inputStream.read(frameMaskingKey);
     }
-
-//    System.out.println("WS_FRAME(opcode=" + opcode + ";frameMasked=" + frameMasked + ";payloadLength="
-//            + payloadLength + ";frameMask=" + Arrays.toString(frameMaskingKey) + ")");
-
 
     final StringBuilder payloadBuffer = new StringBuilder(payloadLength);
     switch (opcode) {
@@ -95,8 +88,7 @@ public class Hybi07Socket extends AbstractWebSocket {
         int read = 0;
         if (frameMasked) {
           do {
-            int r = inputStream.read();
-            payloadBuffer.append(((char) ((r ^ frameMaskingKey[read % 4]) & 127)));
+            payloadBuffer.append(((char) ((inputStream.read() ^ frameMaskingKey[read % 4]) & 127)));
           }
           while (++read < payloadLength);
         }
@@ -118,12 +110,10 @@ public class Hybi07Socket extends AbstractWebSocket {
         break;
 
       case OPCODE_BINARY:
-        // binary transmission not supported
-        break;
-
+        // binary transmission not yet supported
+        throw new RuntimeException("binary frame not yet supported");
     }
 
-  //  System.out.println("ReadTextFrame: <<" + payloadBuffer.toString() + ">>");
 
     return payloadBuffer.toString();
   }
@@ -142,8 +132,6 @@ public class Hybi07Socket extends AbstractWebSocket {
   }
 
   private void _writeTextFrame(final String txt) throws IOException {
-//    System.out.println("WriteTextFrame: <<" + txt + ">>");
-
     byte[] strBytes = txt.getBytes("UTF-8");
 
     outputStream.write(-127);
@@ -182,12 +170,7 @@ public class Hybi07Socket extends AbstractWebSocket {
      */
     final byte[] mask = new byte[4];
     random.nextBytes(mask);
-
-    outputStream.write(mask[0]);
-    outputStream.write(mask[1]);
-    outputStream.write(mask[2]);
-    outputStream.write(mask[3]);
-
+    outputStream.write(mask);
 
     int len = strBytes.length;
     for (int j = 0; j < len; j++) {
