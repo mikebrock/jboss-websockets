@@ -46,22 +46,23 @@ public final class Hash {
   }
 
   public static String newUniqueHash() {
-    return nextSecureHash(hashAlgorithm, String.valueOf(System.nanoTime()));
+    return nextSecureHash(hashAlgorithm, SecureRandom.getSeed(128));
   }
 
-  private static String nextSecureHash(final String algorithm, final String additionalSeed) {
+  private static String nextSecureHash(final String algorithm, final byte[] additionalSeed) {
     try {
       final MessageDigest md = MessageDigest.getInstance(algorithm);
 
       md.update(String.valueOf(System.nanoTime()).getBytes());
 
       if (additionalSeed != null) {
-        md.update(additionalSeed.getBytes());
+        md.update(additionalSeed);
       }
 
       byte[] randBytes = new byte[64];
       random.nextBytes(randBytes);
 
+      // 1,000 rounds.
       for (int i = 0; i < 1000; i++) {
         md.update(md.digest());
       }
