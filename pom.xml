@@ -22,7 +22,22 @@
 
     <groupId>org.jboss.as</groupId>
     <artifactId>jboss-as-websockets</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.Alpha2</version>
+    <description>WebSockets for JBoss AS 7.1+</description>
+    <url>http://www.jboss.org/</url>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+         <connection>scm:git:git@github.com:mikebrock/jboss-websockets.git</connection>
+         <developerConnection>scm:git:git@github.com:mikebrock/jboss-websockets.git/developerConnection>
+         <url>scm:git:git@github.com:mikebrock/jboss-websockets.git</url>
+     </scm>
 
     <dependencies>
         <dependency>
