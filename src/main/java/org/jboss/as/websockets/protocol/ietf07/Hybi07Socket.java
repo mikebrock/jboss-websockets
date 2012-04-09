@@ -19,6 +19,7 @@ package org.jboss.as.websockets.protocol.ietf07;
 import org.jboss.as.websockets.AbstractWebSocket;
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.protocol.ietf00.Hybi00Socket;
+import org.jboss.as.websockets.util.Hash;
 import org.jboss.servlet.http.HttpEvent;
 
 import java.io.IOException;
@@ -131,18 +132,18 @@ public class Hybi07Socket extends AbstractWebSocket {
     return payloadBuffer.toString();
   }
 
-  private final static String secureRandomAlgorithm = "SHA1PRNG";
-  final static SecureRandom random;
-
-  static {
-    try {
-      random = SecureRandom.getInstance(secureRandomAlgorithm);
-      random.setSeed(SecureRandom.getInstance(secureRandomAlgorithm).generateSeed(64));
-    }
-    catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException("runtime does not support secure random algorithm: " + secureRandomAlgorithm);
-    }
-  }
+//  private final static String secureRandomAlgorithm = "SHA1PRNG";
+//  final static SecureRandom random;
+//
+//  static {
+//    try {
+//      random = SecureRandom.getInstance(secureRandomAlgorithm);
+//      random.setSeed(SecureRandom.getInstance(secureRandomAlgorithm).generateSeed(64));
+//    }
+//    catch (NoSuchAlgorithmException e) {
+//      throw new RuntimeException("runtime does not support secure random algorithm: " + secureRandomAlgorithm);
+//    }
+//  }
 
   private void _writeTextFrame(final String txt) throws IOException {
     byte[] strBytes = txt.getBytes("UTF-8");
@@ -182,7 +183,7 @@ public class Hybi07Socket extends AbstractWebSocket {
      security-sensitive applications.
      */
     final byte[] mask = new byte[4];
-    random.nextBytes(mask);
+    Hash.getRandomBytes(mask);
     outputStream.write(mask);
 
     int len = strBytes.length;

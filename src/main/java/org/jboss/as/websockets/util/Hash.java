@@ -24,7 +24,8 @@ import java.security.SecureRandom;
  * @author Mike Brock
  */
 public final class Hash {
-  private Hash() {}
+  private Hash() {
+  }
 
   final static String secureRandomAlgorithm = "SHA1PRNG";
   final static String hashAlgorithm = "SHA1";
@@ -38,6 +39,10 @@ public final class Hash {
     catch (NoSuchAlgorithmException e) {
       throw new RuntimeException("runtime does not support secure random algorithm: " + secureRandomAlgorithm);
     }
+  }
+
+  public static void getRandomBytes(byte[] bytes) {
+    random.nextBytes(bytes);
   }
 
   public static String newUniqueHash() {
