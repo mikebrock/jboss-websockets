@@ -23,6 +23,7 @@
     <groupId>org.jboss.as</groupId>
     <artifactId>jboss-as-websockets</artifactId>
     <version>0.1.Alpha2</version>
+    <name>WebSockets for JBoss AS</name>
     <description>WebSockets for JBoss AS 7.1+</description>
     <url>http://www.jboss.org/</url>
     <licenses>
@@ -32,6 +33,13 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <developers>
+        <developer>
+            <name>Mike Brock</name>
+            <organization>Red Hat, Inc.</organization>
+        </developer>
+    </developers>
 
     <scm>
         <connection>scm:git:git@github.com:mikebrock/jboss-websockets.git</connection>
@@ -95,6 +103,23 @@
             </snapshots>
         </repository>
     </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <!-- DistributionManagement -->
     <distributionManagement>
