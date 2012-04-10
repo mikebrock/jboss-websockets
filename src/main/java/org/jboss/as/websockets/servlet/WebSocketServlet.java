@@ -76,7 +76,9 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
     if (protocolName != null)
       WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, protocolName);
-
+    else {
+      WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, "*");
+    }
   }
 
   public final void event(final HttpEvent event) throws IOException, ServletException {
@@ -113,20 +115,9 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
               request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
               /**
-               * If the handshaker returned data for the response body, we render it now.
-               *
-               * NOTE: This is needed for Hybi-00 and doesn't work because JBossWeb is flushing this data into the
-               *       abyss.
-               */
-              if (handShakeData.length > 0) {
-                response.getOutputStream().write(handShakeData);
-                response.getOutputStream().flush();
-              }
-
-              /**
                * Transition the request from HTTP to a persistent socket.
                */
-              ((UpgradableHttpServletResponse) response).sendUpgrade();
+              ((UpgradableHttpServletResponse) response).sendUpgrade(handShakeData);
 
               log.debug("Websocket opened for session: " + request.getSession().getId());
 

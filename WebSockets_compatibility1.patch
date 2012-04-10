@@ -1,0 +1,1204 @@
+Index: java/org/apache/catalina/connector/ResponseFacade.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/apache/catalina/connector/ResponseFacade.java	(revision 2017)
++++ java/org/apache/catalina/connector/ResponseFacade.java	(revision )
+@@ -455,7 +455,11 @@
+ 
+     }
+ 
+-    public void sendUpgrade()
++    public void sendUpgrade() throws IOException {
++      sendUpgrade(new byte[0]);
++    }
++
++    public void sendUpgrade(byte[] content)
+             throws IOException {
+         
+         if (isCommitted())
+@@ -464,7 +468,7 @@
+ 
+         response.setAppCommitted(true);
+ 
+-        response.sendUpgrade();
++        response.sendUpgrade(content);
+ 
+     }
+ 
+Index: java/org/apache/catalina/connector/Response.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/apache/catalina/connector/Response.java	(revision 2017)
++++ java/org/apache/catalina/connector/Response.java	(revision )
+@@ -146,7 +146,7 @@
+ 
+     /**
+      * Set the Coyote response.
+-     * 
++     *
+      * @param coyoteResponse The Coyote response
+      */
+     public void setCoyoteResponse(org.apache.coyote.Response coyoteResponse) {
+@@ -191,12 +191,12 @@
+      */
+     protected boolean included = false;
+ 
+-    
++
+     /**
+      * The characterEncoding flag
+      */
+     private boolean isCharacterEncodingSet = false;
+-    
++
+     /**
+      * The error flag.
+      */
+@@ -263,7 +263,7 @@
+         included = false;
+         error = false;
+         isCharacterEncodingSet = false;
+-        
++
+         cookies.clear();
+ 
+         if (Globals.IS_SECURITY_ENABLED || Connector.RECYCLE_FACADES) {
+@@ -292,7 +292,7 @@
+     public void clearEncoders() {
+         outputBuffer.clearEncoders();
+     }
+-    
++
+ 
+     // ------------------------------------------------------- Response Methods
+ 
+@@ -303,7 +303,7 @@
+     public int getContentCount() {
+         return outputBuffer.getContentWritten();
+     }
+-    
++
+     /**
+      * Return the number of bytes actually written to the output stream.
+      */
+@@ -313,7 +313,7 @@
+ 
+     /**
+      * Set the application commit flag.
+-     * 
++     *
+      * @param appCommitted The new application committed flag value
+      */
+     public void setAppCommitted(boolean appCommitted) {
+@@ -326,7 +326,7 @@
+      */
+     public boolean isAppCommitted() {
+         return (this.appCommitted || isCommitted() || isSuspended()
+-                || ((getContentLength() > 0) 
++                || ((getContentLength() > 0)
+                     && (getContentCount() >= getContentLength())));
+     }
+ 
+@@ -412,7 +412,7 @@
+ 
+     /**
+      * Set the suspended flag.
+-     * 
++     *
+      * @param suspended The new suspended flag value
+      */
+     public void setSuspended(boolean suspended) {
+@@ -458,7 +458,7 @@
+      *
+      * @exception IOException if an input/output error occurs
+      */
+-    public ServletOutputStream createOutputStream() 
++    public ServletOutputStream createOutputStream()
+         throws IOException {
+         // Probably useless
+         if (outputStream == null) {
+@@ -474,7 +474,7 @@
+      *
+      * @exception IOException if an input/output error occurs
+      */
+-    public void finishResponse() 
++    public void finishResponse()
+         throws IOException {
+         // Writing leftover bytes
+         outputBuffer.close();
+@@ -530,7 +530,7 @@
+         return (outputBuffer.lastWrite() > 0);
+     }
+ 
+-    
++
+     // ------------------------------------------------ ServletResponse Methods
+ 
+ 
+@@ -539,7 +539,7 @@
+      *
+      * @exception IOException if an input/output error occurs
+      */
+-    public void flushBuffer() 
++    public void flushBuffer()
+         throws IOException {
+         outputBuffer.flush();
+     }
+@@ -568,7 +568,7 @@
+      *  already been called for this response
+      * @exception IOException if an input/output error occurs
+      */
+-    public ServletOutputStream getOutputStream() 
++    public ServletOutputStream getOutputStream()
+         throws IOException {
+ 
+         if (usingWriter)
+@@ -578,7 +578,7 @@
+         if (applicationOutputStream != null) {
+             return applicationOutputStream;
+         }
+-        
++
+         usingOutputStream = true;
+         if (outputStream == null) {
+             outputStream = new CoyoteOutputStream(outputBuffer);
+@@ -587,7 +587,7 @@
+ 
+     }
+ 
+-    
++
+     public void setOutputStream(ServletOutputStream outputStream) {
+         applicationOutputStream = outputStream;
+     }
+@@ -608,7 +608,7 @@
+      *  already been called for this response
+      * @exception IOException if an input/output error occurs
+      */
+-    public PrintWriter getWriter() 
++    public PrintWriter getWriter()
+         throws IOException {
+ 
+         if (usingOutputStream)
+@@ -701,14 +701,14 @@
+      * @param resetWriterStreamFlags <code>true</code> if the internal
+      *        <code>usingWriter</code>, <code>usingOutputStream</code>,
+      *        <code>isCharacterEncodingSet</code> flags should also be reset
+-     * 
++     *
+      * @exception IllegalStateException if the response has already
+      *  been committed
+      */
+     public void resetBuffer(boolean resetWriterStreamFlags) {
+ 
+         resetBuffer();
+-        
++
+         if(resetWriterStreamFlags) {
+             usingOutputStream = false;
+             usingWriter = false;
+@@ -717,7 +717,7 @@
+ 
+     }
+ 
+-    
++
+     /**
+      * Set the buffer size to be used for this Response.
+      *
+@@ -750,10 +750,10 @@
+         // Ignore any call from an included servlet
+         if (included)
+             return;
+-        
++
+         if (usingWriter)
+             return;
+-        
++
+         coyoteResponse.setContentLength(length);
+ 
+     }
+@@ -821,11 +821,11 @@
+ 
+         if (isCommitted())
+             return;
+-        
++
+         // Ignore any call from an included servlet
+         if (included)
+-            return;     
+-        
++            return;
++
+         // Ignore any call made after the getWriter has been invoked
+         // The default should be used
+         if (usingWriter)
+@@ -835,8 +835,8 @@
+         isCharacterEncodingSet = true;
+     }
+ 
+-    
+-    
++
++
+     /**
+      * Set the Locale that is appropriate for this response, including
+      * setting the appropriate character encoding.
+@@ -944,8 +944,8 @@
+         }
+         return headerValuesCollection;
+     }
+-    
+-    
++
++
+     /**
+      * Return an array of all the header values associated with the
+      * specified header name, or an zero-length array if there are no such
+@@ -1029,15 +1029,15 @@
+             return;
+ 
+         final StringBuffer sb = new StringBuffer();
+-        // web application code can receive a IllegalArgumentException 
++        // web application code can receive a IllegalArgumentException
+         // from the appendCookieValue invocation
+         if (SecurityUtil.isPackageProtectionEnabled()) {
+             AccessController.doPrivileged(new PrivilegedAction() {
+                 public Object run(){
+                     ServerCookie.appendCookieValue
+-                        (sb, cookie.getVersion(), cookie.getName(), 
+-                         cookie.getValue(), cookie.getPath(), 
+-                         cookie.getDomain(), cookie.getComment(), 
++                        (sb, cookie.getVersion(), cookie.getName(),
++                         cookie.getValue(), cookie.getPath(),
++                         cookie.getDomain(), cookie.getComment(),
+                          cookie.getMaxAge(), cookie.getSecure(), cookie.isHttpOnly());
+                     return null;
+                 }
+@@ -1045,7 +1045,7 @@
+         } else {
+             ServerCookie.appendCookieValue
+                 (sb, cookie.getVersion(), cookie.getName(), cookie.getValue(),
+-                     cookie.getPath(), cookie.getDomain(), cookie.getComment(), 
++                     cookie.getPath(), cookie.getDomain(), cookie.getComment(),
+                      cookie.getMaxAge(), cookie.getSecure(), cookie.isHttpOnly());
+         }
+         // if we reached here, no exception, cookie is valid
+@@ -1199,10 +1199,10 @@
+      * @param url URL to be encoded
+      */
+     public String encodeURL(String url) {
+-        
++
+         String absolute = toAbsolute(url);
+         if (isEncodeable(absolute)) {
+-            // W3c spec clearly said 
++            // W3c spec clearly said
+             if (url.equalsIgnoreCase("")){
+                 url = absolute;
+             }
+@@ -1230,7 +1230,7 @@
+ 
+     /**
+      * Send an acknowledgment of a request.
+-     * 
++     *
+      * @exception IOException if an input/output error occurs
+      */
+     public void sendAcknowledgement()
+@@ -1241,7 +1241,7 @@
+ 
+         // Ignore any call from an included servlet
+         if (included)
+-            return; 
++            return;
+ 
+         coyoteResponse.acknowledge();
+ 
+@@ -1258,7 +1258,7 @@
+      *  already been committed
+      * @exception IOException if an input/output error occurs
+      */
+-    public void sendError(int status) 
++    public void sendError(int status)
+         throws IOException {
+         sendError(status, null);
+     }
+@@ -1274,7 +1274,7 @@
+      *  already been committed
+      * @exception IOException if an input/output error occurs
+      */
+-    public void sendError(int status, String message) 
++    public void sendError(int status, String message)
+         throws IOException {
+ 
+         if (isCommitted())
+@@ -1283,12 +1283,12 @@
+ 
+         // Ignore any call from an included servlet
+         if (included)
+-            return; 
++            return;
+ 
+         Wrapper wrapper = getRequest().getWrapper();
+         if (wrapper != null) {
+             wrapper.incrementErrorCount();
+-        } 
++        }
+ 
+         setError();
+ 
+@@ -1313,7 +1313,7 @@
+      *  already been committed
+      * @exception IOException if an input/output error occurs
+      */
+-    public void sendRedirect(String location) 
++    public void sendRedirect(String location)
+         throws IOException {
+ 
+         if (isCommitted())
+@@ -1322,7 +1322,7 @@
+ 
+         // Ignore any call from an included servlet
+         if (included)
+-            return; 
++            return;
+ 
+         // Clear any data content that has been buffered
+         resetBuffer();
+@@ -1342,7 +1342,7 @@
+     }
+ 
+ 
+-    public void sendUpgrade()
++    public void sendUpgrade(byte[] content)
+             throws IOException {
+ 
+         if (isCommitted())
+@@ -1359,7 +1359,7 @@
+ 
+         // Ignore any call from an included servlet
+         if (included)
+-            return; 
++            return;
+ 
+         // Clear any data content that has been buffered
+         resetBuffer();
+@@ -1368,11 +1368,13 @@
+         // already been set.
+         setStatus(HttpServletResponse.SC_SWITCHING_PROTOCOLS);
+ 
+-        outputBuffer.flush();
+         request.getCoyoteRequest().action(ActionCode.UPGRADE, null);
+ 
+-    }
++      if (content != null)
++        outputBuffer.write(content, 0, content.length);
+ 
++      outputBuffer.flush();
++    }
+ 
+     public void sendFile(String path, String absolutePath, long start, long end) {
+ 
+@@ -1382,14 +1384,14 @@
+ 
+         // Ignore any call from an included servlet
+         if (included)
+-            return; 
++            return;
+ 
+         if (!request.hasSendfile())
+             throw new IllegalStateException(sm.getString("coyoteResponse.sendFile.no"));
+ 
+         if (Globals.IS_SECURITY_ENABLED) {
+             if (path != null) {
+-                CacheEntry cacheEntry = 
++                CacheEntry cacheEntry =
+                     ((ProxyDirContext) request.getContext().getResources()).lookupCache(path);
+                 if (cacheEntry.exists && cacheEntry.resource != null && (end > start)
+                         && cacheEntry.attributes.getCanonicalPath() != null) {
+@@ -1415,7 +1417,7 @@
+                 coyoteResponse.setSendfileStart(start);
+                 coyoteResponse.setSendfileEnd(end);
+             } else {
+-                CacheEntry cacheEntry = 
++                CacheEntry cacheEntry =
+                     ((ProxyDirContext) request.getContext().getResources()).lookupCache(path);
+                 if (cacheEntry.exists && cacheEntry.resource != null && (end > start)
+                         && cacheEntry.attributes.getCanonicalPath() != null) {
+@@ -1580,7 +1582,7 @@
+             return (false);
+         if (hreq.isRequestedSessionIdFromCookie())
+             return (false);
+-        
++
+         if (SecurityUtil.isPackageProtectionEnabled()) {
+             return ((Boolean)
+                 AccessController.doPrivileged(new PrivilegedAction() {
+@@ -1594,7 +1596,7 @@
+         }
+     }
+ 
+-    private boolean doIsEncodeable(Request hreq, Session session, 
++    private boolean doIsEncodeable(Request hreq, Session session,
+                                    String location) {
+         // Is this a valid absolute URL?
+         URL url = null;
+@@ -1677,18 +1679,18 @@
+                 if (!leadingSlash) {
+                     String relativePath = request.getDecodedRequestURI();
+                     int pos = relativePath.lastIndexOf('/');
+-                    
++
+                     CharChunk encodedURI = null;
+                     if (SecurityUtil.isPackageProtectionEnabled() ){
+                         final String frelativePath = relativePath;
+                         final int fend = pos;
+                         try{
+-                            encodedURI = (CharChunk)AccessController.doPrivileged( 
+-                                new PrivilegedExceptionAction(){                                
++                            encodedURI = (CharChunk)AccessController.doPrivileged(
++                                new PrivilegedExceptionAction(){
+                                     public Object run() throws IOException{
+                                         return urlEncoder.encodeURL(frelativePath, 0, fend);
+                                     }
+-                           });   
++                           });
+                         } catch (PrivilegedActionException pae){
+                             IllegalArgumentException iae =
+                                 new IllegalArgumentException(location);
+Index: java/org/apache/coyote/http11/InternalAprInputBuffer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/apache/coyote/http11/InternalAprInputBuffer.java	(revision 2017)
++++ java/org/apache/coyote/http11/InternalAprInputBuffer.java	(revision )
+@@ -189,8 +189,10 @@
+      * Apr endpoint.
+      */
+     protected AprEndpoint endpoint = null;
+-    
++
+ 
++    protected boolean noFilter = false;
++
+     // ------------------------------------------------------------- Properties
+ 
+ 
+@@ -270,6 +272,7 @@
+      * Add an input filter to the filter library.
+      */
+     public void addActiveFilter(InputFilter filter) {
++      if (noFilter) return;
+ 
+         if (lastActiveFilter == -1) {
+             filter.setBuffer(inputStreamInputBuffer);
+@@ -354,9 +357,10 @@
+         }
+         
+         // Recycle filters
++        if(!noFilter)
+-        for (int i = 0; i <= lastActiveFilter; i++) {
+-            activeFilters[i].recycle();
+-        }
++            for (int i = 0; i <= lastActiveFilter; i++) {
++                activeFilters[i].recycle();
++            }
+ 
+         // Reset pointers
+         lastValid = lastValid - pos;
+@@ -747,6 +751,12 @@
+         // Set the header value
+         headerValue.setBytes(buf, start, realPos - start);
+ 
++        // connection being upgraded to non-HTTP, disable all filters
++        if ("Upgrade".equalsIgnoreCase(headers.getHeader("Connection"))) {
++            removeActiveFilters();
++            noFilter = true;
++        }
++
+         return true;
+ 
+     }
+@@ -778,7 +788,7 @@
+     public int doRead(ByteChunk chunk, Request req) 
+         throws IOException {
+ 
+-        if (lastActiveFilter == -1)
++        if (noFilter || lastActiveFilter == -1)
+             return inputStreamInputBuffer.doRead(chunk, req);
+         else
+             return activeFilters[lastActiveFilter].doRead(chunk,req);
+Index: java/org/apache/catalina/connector/OutputBuffer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/apache/catalina/connector/OutputBuffer.java	(revision 2017)
++++ java/org/apache/catalina/connector/OutputBuffer.java	(revision )
+@@ -406,7 +406,6 @@
+ 
+     }
+ 
+-
+     public void write(byte b[], int off, int len) throws IOException {
+ 
+         if (suspended)
+Index: java/org/jboss/servlet/http/UpgradableHttpServletResponse.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/jboss/servlet/http/UpgradableHttpServletResponse.java	(revision 2017)
++++ java/org/jboss/servlet/http/UpgradableHttpServletResponse.java	(revision )
+@@ -30,8 +30,16 @@
+  * @author remm
+  */
+ public interface UpgradableHttpServletResponse {
+-
+     public void sendUpgrade()
++          throws IOException;
++
++  /**
++   * Send the upgrade response, followed by a byte payload.
++   *
++   * @param bodyContent a sequence of bytes to transmit directly after the upgrade headers.
++   * @throws IOException
++   */
++    public void sendUpgrade(byte[] bodyContent)
+             throws IOException;
+ 
+ }
+Index: java/org/apache/coyote/http11/InternalAprOutputBuffer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/apache/coyote/http11/InternalAprOutputBuffer.java	(revision 2017)
++++ java/org/apache/coyote/http11/InternalAprOutputBuffer.java	(revision )
+@@ -35,10 +35,10 @@
+ 
+ /**
+  * Output buffer.
+- * 
++ *
+  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
+  */
+-public class InternalAprOutputBuffer 
++public class InternalAprOutputBuffer
+     implements OutputBuffer {
+ 
+ 
+@@ -61,141 +61,146 @@
+         if (headerBufferSize < (8 * 1024)) {
+             bbuf = ByteBuffer.allocateDirect(6 * 1500);
+         } else {
+-            bbuf = ByteBuffer.allocateDirect((headerBufferSize / 1500 + 1) * 1500);
+-        }
++      bbuf = ByteBuffer.allocateDirect((headerBufferSize / 1500 + 1) * 1500);
++    }
+ 
+-        outputStreamOutputBuffer = new SocketOutputBuffer();
++    outputStreamOutputBuffer = new SocketOutputBuffer();
+ 
+-        filterLibrary = new OutputFilter[0];
+-        activeFilters = new OutputFilter[0];
+-        lastActiveFilter = -1;
++    filterLibrary = new OutputFilter[0];
++    activeFilters = new OutputFilter[0];
++    lastActiveFilter = -1;
+ 
+-        committed = false;
+-        finished = false;
++    committed = false;
++    finished = false;
+ 
+-        leftover = new ByteChunk();
+-        nonBlocking = false;
+-        
+-        // Cause loading of HttpMessages
+-        HttpMessages.getMessage(200);
++    leftover = new ByteChunk();
++    nonBlocking = false;
++
++    // Cause loading of HttpMessages
++    HttpMessages.getMessage(200);
+ 
+-    }
++  }
+ 
+ 
+-    // -------------------------------------------------------------- Variables
++  // -------------------------------------------------------------- Variables
+ 
+ 
+-    /**
+-     * The string manager for this package.
+-     */
+-    protected static StringManager sm =
+-        StringManager.getManager(Constants.Package);
++  /**
++   * The string manager for this package.
++   */
++  protected static StringManager sm =
++          StringManager.getManager(Constants.Package);
+ 
+ 
+-    // ----------------------------------------------------- Instance Variables
++  // ----------------------------------------------------- Instance Variables
+ 
+ 
+-    /**
+-     * Associated Coyote response.
+-     */
+-    protected Response response;
++  /**
++   * Associated Coyote response.
++   */
++  protected Response response;
+ 
+ 
+-    /**
+-     * Headers of the associated request.
+-     */
+-    protected MimeHeaders headers;
++  /**
++   * Headers of the associated request.
++   */
++  protected MimeHeaders headers;
+ 
+ 
+-    /**
+-     * Committed flag.
+-     */
+-    protected boolean committed;
++  /**
++   * Committed flag.
++   */
++  protected boolean committed;
+ 
+ 
+-    /**
+-     * Finished flag.
+-     */
+-    protected boolean finished;
++  /**
++   * Finished flag.
++   */
++  protected boolean finished;
+ 
+ 
+-    /**
+-     * Pointer to the current write buffer.
+-     */
+-    protected byte[] buf;
++  /**
++   * Pointer to the current write buffer.
++   */
++  protected byte[] buf;
+ 
+ 
+-    /**
+-     * Position in the buffer.
+-     */
+-    protected int pos;
++  /**
++   * Position in the buffer.
++   */
++  protected int pos;
+ 
+ 
+-    /**
+-     * Underlying socket.
+-     */
+-    protected long socket;
++  /**
++   * Underlying socket.
++   */
++  protected long socket;
+ 
+ 
+-    /**
+-     * Underlying output buffer.
+-     */
+-    protected OutputBuffer outputStreamOutputBuffer;
++  /**
++   * Underlying output buffer.
++   */
++  protected OutputBuffer outputStreamOutputBuffer;
+ 
+ 
+-    /**
+-     * Filter library.
+-     * Note: Filter[0] is always the "chunked" filter.
+-     */
+-    protected OutputFilter[] filterLibrary;
++  /**
++   * Filter library.
++   * Note: Filter[0] is always the "chunked" filter.
++   */
++  protected OutputFilter[] filterLibrary;
+ 
+ 
+-    /**
+-     * Active filter (which is actually the top of the pipeline).
+-     */
+-    protected OutputFilter[] activeFilters;
++  /**
++   * Active filter (which is actually the top of the pipeline).
++   */
++  protected OutputFilter[] activeFilters;
+ 
+ 
+-    /**
+-     * Index of the last active filter.
+-     */
+-    protected int lastActiveFilter;
++  /**
++   * Index of the last active filter.
++   */
++  protected int lastActiveFilter;
+ 
+ 
+-    /**
+-     * Direct byte buffer used for writing.
+-     */
+-    protected ByteBuffer bbuf = null;
++  /**
++   * Direct byte buffer used for writing.
++   */
++  protected ByteBuffer bbuf = null;
+ 
+-    
+-    /**
+-     * Leftover bytes which could not be written during a non blocking write. 
+-     */
+-    protected ByteChunk leftover = null;
++
++  /**
++   * Leftover bytes which could not be written during a non blocking write.
++   */
++  protected ByteChunk leftover = null;
+ 
+-    
+-    /**
+-     * Non blocking mode.
+-     */
+-    protected boolean nonBlocking = false;
+-    
++
++  /**
++   * Non blocking mode.
++   */
++  protected boolean nonBlocking = false;
++
+ 
+-    /**
+-     * Apr endpoint.
+-     */
+-    protected AprEndpoint endpoint = null;
+-    
++  /**
++   * Apr endpoint.
++   */
++  protected AprEndpoint endpoint = null;
++
+ 
++  /**
++   * Disable all filters -- for websocket support
++   */
++  protected boolean noFilter = false;
++
+-    // ------------------------------------------------------------- Properties
++  // ------------------------------------------------------------- Properties
+ 
+ 
+-    /**
+-     * Set the underlying socket.
+-     */
+-    public void setSocket(long socket) {
+-        this.socket = socket;
+-        Socket.setsbb(this.socket, bbuf);
+-    }
++  /**
++   * Set the underlying socket.
++   */
++  public void setSocket(long socket) {
++    this.socket = socket;
++    Socket.setsbb(this.socket, bbuf);
++  }
+ 
+ 
+     /**
+@@ -226,8 +231,10 @@
+      * Add an output filter to the filter library.
+      */
+     public void addFilter(OutputFilter filter) {
++        if (noFilter)
++         return;
+ 
+-        OutputFilter[] newFilterLibrary = 
++        OutputFilter[] newFilterLibrary =
+             new OutputFilter[filterLibrary.length + 1];
+         for (int i = 0; i < filterLibrary.length; i++) {
+             newFilterLibrary[i] = filterLibrary[i];
+@@ -260,11 +267,18 @@
+ 
+     }
+ 
++    public void disableFilters() {
+ 
++        noFilter = true;
++
++    }
++
+     /**
+      * Add an output filter to the filter library.
+      */
+     public void addActiveFilter(OutputFilter filter) {
++        if (noFilter)
++            return;
+ 
+         if (lastActiveFilter == -1) {
+             filter.setBuffer(outputStreamOutputBuffer);
+@@ -297,7 +311,7 @@
+ 
+     /**
+      * Flush the response.
+-     * 
++     *
+      * @throws IOException an undelying I/O error occured
+      */
+     public void flush()
+@@ -306,7 +320,7 @@
+         if (!committed) {
+ 
+             // Send the connector a request for commit. The connector should
+-            // then validate the headers, send them (using sendHeader) and 
++            // then validate the headers, send them (using sendHeader) and
+             // set the filters accordingly.
+             response.action(ActionCode.ACTION_COMMIT, null);
+ 
+@@ -319,7 +333,7 @@
+ 
+ 
+     /**
+-     * Recycle the output buffer. This should be called when closing the 
++     * Recycle the output buffer. This should be called when closing the
+      * connection.
+      */
+     public void recycle() {
+@@ -339,7 +353,7 @@
+ 
+     /**
+      * End processing of current HTTP request.
+-     * Note: All bytes of the current request should have been already 
++     * Note: All bytes of the current request should have been already
+      * consumed. This method only resets all the pointers so that we are ready
+      * to parse the next HTTP request.
+      */
+@@ -366,7 +380,7 @@
+ 
+     /**
+      * End request.
+-     * 
++     *
+      * @throws IOException an undelying I/O error occured
+      */
+     public void endRequest()
+@@ -375,7 +389,7 @@
+         if (!committed) {
+ 
+             // Send the connector a request for commit. The connector should
+-            // then validate the headers, send them (using sendHeader) and 
++            // then validate the headers, send them (using sendHeader) and
+             // set the filters accordingly.
+             response.action(ActionCode.ACTION_COMMIT, null);
+ 
+@@ -458,7 +472,7 @@
+ 
+     /**
+      * Send a header.
+-     * 
++     *
+      * @param name Header name
+      * @param value Header value
+      */
+@@ -478,7 +492,7 @@
+ 
+     /**
+      * Send a header.
+-     * 
++     *
+      * @param name Header name
+      * @param value Header value
+      */
+@@ -496,7 +510,7 @@
+ 
+     /**
+      * Send a header.
+-     * 
++     *
+      * @param name Header name
+      * @param value Header value
+      */
+@@ -528,30 +542,30 @@
+ 
+     /**
+      * Write the contents of a byte chunk.
+-     * 
++     *
+      * @param chunk byte chunk
+      * @return number of bytes written
+      * @throws IOException an undelying I/O error occured
+      */
+-    public int doWrite(ByteChunk chunk, Response res) 
++    public int doWrite(ByteChunk chunk, Response res)
+         throws IOException {
+ 
+         if (!committed) {
+ 
+             // Send the connector a request for commit. The connector should
+-            // then validate the headers, send them (using sendHeaders) and 
++            // then validate the headers, send them (using sendHeaders) and
+             // set the filters accordingly.
+             response.action(ActionCode.ACTION_COMMIT, null);
+ 
+         }
+ 
+-        // If non blocking (event) and there are leftover bytes, 
++        // If non blocking (event) and there are leftover bytes,
+         // and lastWrite was 0 -> error
+         if (leftover.getLength() > 0 && !(Http11AprProcessor.containerThread.get() == Boolean.TRUE)) {
+             throw new IOException(sm.getString("oob.backlog"));
+         }
+ 
+-        if (lastActiveFilter == -1)
++        if (noFilter || lastActiveFilter == -1)
+             return outputStreamOutputBuffer.doWrite(chunk, res);
+         else
+             return activeFilters[lastActiveFilter].doWrite(chunk, res);
+@@ -564,7 +578,7 @@
+ 
+     /**
+      * Commit the response.
+-     * 
++     *
+      * @throws IOException an undelying I/O error occured
+      */
+     protected void commit()
+@@ -583,10 +597,10 @@
+ 
+ 
+     /**
+-     * This method will write the contents of the specyfied message bytes 
++     * This method will write the contents of the specyfied message bytes
+      * buffer to the output stream, without filtering. This method is meant to
+      * be used to write the response header.
+-     * 
++     *
+      * @param mb data to be written
+      */
+     protected void write(MessageBytes mb) {
+@@ -605,10 +619,10 @@
+ 
+ 
+     /**
+-     * This method will write the contents of the specyfied message bytes 
++     * This method will write the contents of the specyfied message bytes
+      * buffer to the output stream, without filtering. This method is meant to
+      * be used to write the response header.
+-     * 
++     *
+      * @param bc data to be written
+      */
+     protected void write(ByteChunk bc) {
+@@ -622,10 +636,10 @@
+ 
+ 
+     /**
+-     * This method will write the contents of the specyfied char 
++     * This method will write the contents of the specyfied char
+      * buffer to the output stream, without filtering. This method is meant to
+      * be used to write the response header.
+-     * 
++     *
+      * @param cc data to be written
+      */
+     protected void write(CharChunk cc) {
+@@ -649,10 +663,10 @@
+ 
+ 
+     /**
+-     * This method will write the contents of the specyfied byte 
++     * This method will write the contents of the specyfied byte
+      * buffer to the output stream, without filtering. This method is meant to
+      * be used to write the response header.
+-     * 
++     *
+      * @param b data to be written
+      */
+     public void write(byte[] b) {
+@@ -665,10 +679,10 @@
+ 
+ 
+     /**
+-     * This method will write the contents of the specyfied String to the 
+-     * output stream, without filtering. This method is meant to be used to 
++     * This method will write the contents of the specyfied String to the
++     * output stream, without filtering. This method is meant to be used to
+      * write the response header.
+-     * 
++     *
+      * @param s data to be written
+      */
+     protected void write(String s) {
+@@ -696,10 +710,10 @@
+ 
+ 
+     /**
+-     * This method will print the specified integer to the output stream, 
+-     * without filtering. This method is meant to be used to write the 
++     * This method will print the specified integer to the output stream,
++     * without filtering. This method is meant to be used to write the
+      * response header.
+-     * 
++     *
+      * @param i data to be written
+      */
+     protected void write(int i) {
+@@ -708,10 +722,10 @@
+ 
+     }
+ 
+-    
++
+     /**
+      * Flush leftover bytes.
+-     * 
++     *
+      * @return true if all leftover bytes have been flushed
+      */
+     public boolean flushLeftover()
+@@ -719,7 +733,7 @@
+         int len = leftover.getLength();
+         int start = leftover.getStart();
+         byte[] b = leftover.getBuffer();
+-        
++
+         while (len > 0) {
+             int thisTime = len;
+             if (bbuf.position() == bbuf.capacity()) {
+@@ -754,7 +768,7 @@
+             len = len - thisTime;
+             start = start + thisTime;
+         }
+-        
++
+         int pos = 0;
+         int end = bbuf.position();
+         if (pos < end) {
+@@ -786,7 +800,7 @@
+ 
+         return true;
+     }
+-    
++
+ 
+     /**
+      * Callback to write data from the buffer.
+@@ -795,7 +809,7 @@
+         throws IOException {
+ 
+         int res = 0;
+-        
++
+         // If there are still leftover bytes here, this means the user did a direct flush:
+         // - If the call is asynchronous, throw an exception
+         // - If the call is synchronous, make regular blocking writes to flush the data
+@@ -815,7 +829,7 @@
+                 throw new IOException(sm.getString("oob.backlog"));
+             }
+         }
+-        
++
+         if (bbuf.position() > 0) {
+             if (nonBlocking) {
+                 // Perform non blocking writes until all data is written, or the result
+@@ -859,7 +873,7 @@
+                 throw new IOException(sm.getString("oob.failedwrite"));
+             }
+         }
+-        
++
+     }
+ 
+ 
+@@ -870,24 +884,24 @@
+      * This class is an output buffer which will write data to an output
+      * stream.
+      */
+-    protected class SocketOutputBuffer 
++    protected class SocketOutputBuffer
+         implements OutputBuffer {
+ 
+ 
+         /**
+          * Write chunk.
+          */
+-        public int doWrite(ByteChunk chunk, Response res) 
++        public int doWrite(ByteChunk chunk, Response res)
+             throws IOException {
+ 
+-            // If non blocking (event) and there are leftover bytes, 
++            // If non blocking (event) and there are leftover bytes,
+             // put all remaining bytes in the leftover buffer (they are
+             // part of the same write operation)
+             if (leftover.getLength() > 0) {
+                 leftover.append(chunk);
+                 return chunk.getLength();
+             }
+-            
++
+             int len = chunk.getLength();
+             int start = chunk.getStart();
+             byte[] b = chunk.getBuffer();
+@@ -896,7 +910,7 @@
+                 if (bbuf.position() == bbuf.capacity()) {
+                     flushBuffer();
+                     if (leftover.getLength() > 0) {
+-                        // If non blocking (event) and there are leftover bytes, 
++                        // If non blocking (event) and there are leftover bytes,
+                         // put all remaining bytes in the leftover buffer (they are
+                         // part of the same write operation)
+                         int oldStart = chunk.getOffset();
+Index: java/org/apache/coyote/http11/Http11AprProcessor.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/apache/coyote/http11/Http11AprProcessor.java	(revision 2017)
++++ java/org/apache/coyote/http11/Http11AprProcessor.java	(revision )
+@@ -1048,7 +1048,7 @@
+             if ((response.isCommitted()) || !expectation)
+                 return;
+ 
+-            inputBuffer.setSwallowInput(true);
++          //  inputBuffer.setSwallowInput(true);
+             try {
+                 outputBuffer.sendAck();
+             } catch (IOException e) {
+@@ -1301,6 +1301,7 @@
+             // Switch to raw bytes mode
+             inputBuffer.removeActiveFilters();
+             outputBuffer.removeActiveFilters();
++            outputBuffer.disableFilters();
+         }
+ 
+     }

@@ -152,8 +152,7 @@ public class Hybi07Socket extends AbstractWebSocket {
     if (strBytes.length > Short.MAX_VALUE) {
       outputStream.write(-1); // unsigned 7-bit int of value 127 -- leading bit indicates masking.
 
-      // pad the 64-bit number -- Java doesn't support 64-bit ints, and I'm relatively sure no payload
-      // will require that sort of frame size in the real world.
+      // pad the first 4 bytes of 64-bit context length. If this frame is larger than 2GB, you're in trouble. =)
       outputStream.write(0);
       outputStream.write(0);
       outputStream.write(0);

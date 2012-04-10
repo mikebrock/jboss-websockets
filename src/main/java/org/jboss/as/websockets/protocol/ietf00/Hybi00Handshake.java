@@ -59,7 +59,7 @@ public class Hybi00Handshake extends Handshake {
     final HttpServletResponse response = event.getHttpServletResponse();
 
     if (WebSocketHeaders.ORIGIN.isIn(request)) {
-      WebSocketHeaders.SEC_WEBSOCKET_ORIGIN.set(response, WebSocketHeaders.ORIGIN.get(request));
+      WebSocketHeaders.SEC_WEBSOCKET_ORIGIN.set(response, WebSocketHeaders.ORIGIN.get(request).trim());
     }
 
     final String origin = "ws://" + request.getHeader("Host") + request.getRequestURI();
@@ -93,11 +93,11 @@ public class Hybi00Handshake extends Handshake {
 
     final byte[] solution = new byte[16];
     buffer.rewind();
-    buffer.get(solution);
+    buffer.get(solution, 0, 16);
+
     try {
       final MessageDigest digest = MessageDigest.getInstance(hashAlgorithm);
-      final byte[] solutionMD5 = digest.digest(solution);
-      return solutionMD5;
+      return digest.digest(solution);
     }
     catch (NoSuchAlgorithmException e) {
       throw new RuntimeException("error generating hash", e);
@@ -116,10 +116,6 @@ public class Hybi00Handshake extends Handshake {
 
     final String digits = encoded.replaceAll("[^0-9]", "");
     final long product = Long.parseLong(digits);
-    final long key = product / numSpaces;
-
-    return key;
+    return product / numSpaces;
   }
-
-
 }
