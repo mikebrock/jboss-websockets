@@ -36,7 +36,7 @@ Example Implementation:
       }
 
       @Override
-      protected void onSocketClosed(HttpEvent event) throws IOException {
+      protected void onSocketClosed(HttpEvent event, WebSocket socket) throws IOException {
         System.out.println("Websocket closed :(");
       }
 
