@@ -499,7 +499,15 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
  
          if (lastActiveFilter == -1) {
              filter.setBuffer(inputStreamInputBuffer);
-@@ -354,9 +357,10 @@
+@@ -324,6 +327,7 @@
+         parsingHeader = true;
+         swallowInput = true;
+         available = false;
++        noFilter = false;
+ 
+     }
+ 
+@@ -354,9 +358,10 @@
          }
          
          // Recycle filters
@@ -513,7 +521,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
  
          // Reset pointers
          lastValid = lastValid - pos;
-@@ -747,6 +751,12 @@
+@@ -747,6 +752,12 @@
          // Set the header value
          headerValue.setBytes(buf, start, realPos - start);
  
@@ -526,7 +534,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
          return true;
  
      }
-@@ -778,7 +788,7 @@
+@@ -778,7 +789,7 @@
      public int doRead(ByteChunk chunk, Request req) 
          throws IOException {
  
@@ -535,21 +543,6 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
              return inputStreamInputBuffer.doRead(chunk, req);
          else
              return activeFilters[lastActiveFilter].doRead(chunk,req);
-Index: java/org/apache/catalina/connector/OutputBuffer.java
-IDEA additional info:
-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
-<+>UTF-8
-===================================================================
---- java/org/apache/catalina/connector/OutputBuffer.java	(revision 2017)
-+++ java/org/apache/catalina/connector/OutputBuffer.java	(revision )
-@@ -406,7 +406,6 @@
- 
-     }
- 
--
-     public void write(byte b[], int off, int len) throws IOException {
- 
-         if (suspended)
 Index: java/org/jboss/servlet/http/UpgradableHttpServletResponse.java
 IDEA additional info:
 Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
@@ -575,6 +568,21 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
              throws IOException;
  
  }
+Index: java/org/apache/catalina/connector/OutputBuffer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- java/org/apache/catalina/connector/OutputBuffer.java	(revision 2017)
++++ java/org/apache/catalina/connector/OutputBuffer.java	(revision )
+@@ -406,7 +406,6 @@
+ 
+     }
+ 
+-
+     public void write(byte b[], int off, int len) throws IOException {
+ 
+         if (suspended)
 Index: java/org/apache/coyote/http11/InternalAprOutputBuffer.java
 IDEA additional info:
 Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
@@ -894,7 +902,14 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * connection.
       */
      public void recycle() {
-@@ -339,7 +353,7 @@
+@@ -333,13 +347,14 @@
+         lastActiveFilter = -1;
+         committed = false;
+         finished = false;
++        noFilter = false;
+ 
+     }
+ 
  
      /**
       * End processing of current HTTP request.
@@ -903,7 +918,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * consumed. This method only resets all the pointers so that we are ready
       * to parse the next HTTP request.
       */
-@@ -366,7 +380,7 @@
+@@ -366,7 +381,7 @@
  
      /**
       * End request.
@@ -912,7 +927,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @throws IOException an undelying I/O error occured
       */
      public void endRequest()
-@@ -375,7 +389,7 @@
+@@ -375,7 +390,7 @@
          if (!committed) {
  
              // Send the connector a request for commit. The connector should
@@ -921,7 +936,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
              // set the filters accordingly.
              response.action(ActionCode.ACTION_COMMIT, null);
  
-@@ -458,7 +472,7 @@
+@@ -458,7 +473,7 @@
  
      /**
       * Send a header.
@@ -930,7 +945,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param name Header name
       * @param value Header value
       */
-@@ -478,7 +492,7 @@
+@@ -478,7 +493,7 @@
  
      /**
       * Send a header.
@@ -939,7 +954,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param name Header name
       * @param value Header value
       */
-@@ -496,7 +510,7 @@
+@@ -496,7 +511,7 @@
  
      /**
       * Send a header.
@@ -948,7 +963,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param name Header name
       * @param value Header value
       */
-@@ -528,30 +542,30 @@
+@@ -528,30 +543,30 @@
  
      /**
       * Write the contents of a byte chunk.
@@ -984,7 +999,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
              return outputStreamOutputBuffer.doWrite(chunk, res);
          else
              return activeFilters[lastActiveFilter].doWrite(chunk, res);
-@@ -564,7 +578,7 @@
+@@ -564,7 +579,7 @@
  
      /**
       * Commit the response.
@@ -993,7 +1008,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @throws IOException an undelying I/O error occured
       */
      protected void commit()
-@@ -583,10 +597,10 @@
+@@ -583,10 +598,10 @@
  
  
      /**
@@ -1006,7 +1021,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param mb data to be written
       */
      protected void write(MessageBytes mb) {
-@@ -605,10 +619,10 @@
+@@ -605,10 +620,10 @@
  
  
      /**
@@ -1019,7 +1034,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param bc data to be written
       */
      protected void write(ByteChunk bc) {
-@@ -622,10 +636,10 @@
+@@ -622,10 +637,10 @@
  
  
      /**
@@ -1032,7 +1047,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param cc data to be written
       */
      protected void write(CharChunk cc) {
-@@ -649,10 +663,10 @@
+@@ -649,10 +664,10 @@
  
  
      /**
@@ -1045,7 +1060,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param b data to be written
       */
      public void write(byte[] b) {
-@@ -665,10 +679,10 @@
+@@ -665,10 +680,10 @@
  
  
      /**
@@ -1059,7 +1074,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param s data to be written
       */
      protected void write(String s) {
-@@ -696,10 +710,10 @@
+@@ -696,10 +711,10 @@
  
  
      /**
@@ -1073,7 +1088,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @param i data to be written
       */
      protected void write(int i) {
-@@ -708,10 +722,10 @@
+@@ -708,10 +723,10 @@
  
      }
  
@@ -1086,7 +1101,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
       * @return true if all leftover bytes have been flushed
       */
      public boolean flushLeftover()
-@@ -719,7 +733,7 @@
+@@ -719,7 +734,7 @@
          int len = leftover.getLength();
          int start = leftover.getStart();
          byte[] b = leftover.getBuffer();
@@ -1095,7 +1110,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
          while (len > 0) {
              int thisTime = len;
              if (bbuf.position() == bbuf.capacity()) {
-@@ -754,7 +768,7 @@
+@@ -754,7 +769,7 @@
              len = len - thisTime;
              start = start + thisTime;
          }
@@ -1104,7 +1119,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
          int pos = 0;
          int end = bbuf.position();
          if (pos < end) {
-@@ -786,7 +800,7 @@
+@@ -786,7 +801,7 @@
  
          return true;
      }
@@ -1113,7 +1128,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
  
      /**
       * Callback to write data from the buffer.
-@@ -795,7 +809,7 @@
+@@ -795,7 +810,7 @@
          throws IOException {
  
          int res = 0;
@@ -1122,7 +1137,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
          // If there are still leftover bytes here, this means the user did a direct flush:
          // - If the call is asynchronous, throw an exception
          // - If the call is synchronous, make regular blocking writes to flush the data
-@@ -815,7 +829,7 @@
+@@ -815,7 +830,7 @@
                  throw new IOException(sm.getString("oob.backlog"));
              }
          }
@@ -1131,7 +1146,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
          if (bbuf.position() > 0) {
              if (nonBlocking) {
                  // Perform non blocking writes until all data is written, or the result
-@@ -859,7 +873,7 @@
+@@ -859,7 +874,7 @@
                  throw new IOException(sm.getString("oob.failedwrite"));
              }
          }
@@ -1140,7 +1155,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
      }
  
  
-@@ -870,24 +884,24 @@
+@@ -870,24 +885,24 @@
       * This class is an output buffer which will write data to an output
       * stream.
       */
@@ -1169,7 +1184,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
              int len = chunk.getLength();
              int start = chunk.getStart();
              byte[] b = chunk.getBuffer();
-@@ -896,7 +910,7 @@
+@@ -896,7 +911,7 @@
                  if (bbuf.position() == bbuf.capacity()) {
                      flushBuffer();
                      if (leftover.getLength() > 0) {
