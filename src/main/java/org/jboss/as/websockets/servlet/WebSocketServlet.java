@@ -146,7 +146,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
         break;
 
       case EOF:
-        onSocketClosed(event);
+        onSocketClosed(event, (WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
         break;
 
     }
@@ -233,7 +233,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
    * @param event The HttpEvent associated with the socket closure.
    * @throws IOException
    */
-  protected abstract void onSocketClosed(final HttpEvent event) throws IOException;
+  protected abstract void onSocketClosed(final HttpEvent event, final WebSocket socket) throws IOException;
 
   /**
    * Called when a new text frame is received.
