@@ -61,29 +61,9 @@ public class Hybi00Socket extends AbstractWebSocket {
   @SuppressWarnings("ResultOfMethodCallIgnored")
   public String readTextFrame() throws IOException {
     byte frametype = (byte) inputStream.read();
-    boolean error = false;
 
     if ((frametype & 0x80) == 0x80) {
       throw new RuntimeException("binary payload not supported");
-//      int length = 0;
-//      do {
-//        int b = inputStream.read();
-//        int b_v = b & 0x7F;
-//        length = (length * 128) + b_v;
-//
-//        if ((b & 0x80) == 0x80) {
-//          continue;
-//        }
-//
-//        for (int i = 0; i < length; i++) {
-//          inputStream.read();
-//        }
-//
-//      }
-//      while (false);
-//      if (frametype == 0xFF && length == 0) {
-//        error = true;
-//      }
     }
     else if (frametype == 0) {
       final StringBuilder buf = new StringBuilder();
@@ -97,18 +77,10 @@ public class Hybi00Socket extends AbstractWebSocket {
         buf.append((char) b);
       }
 
-      if (frametype == 0) {
-        return buf.toString();
-      }
-      else {
-        error = true;
-      }
+      return buf.toString();
     }
-
-    if (error) {
+    else {
       throw new RuntimeException("bad websockets payload");
     }
-
-    return "";
   }
 }
