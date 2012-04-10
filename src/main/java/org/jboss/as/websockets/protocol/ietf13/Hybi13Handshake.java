@@ -16,6 +16,7 @@
 
 package org.jboss.as.websockets.protocol.ietf13;
 
+import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
 import org.jboss.as.websockets.protocol.ietf07.Hybi07Handshake;
 import org.jboss.servlet.http.HttpEvent;
@@ -37,6 +38,11 @@ import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL;
 public class Hybi13Handshake extends Hybi07Handshake {
   public Hybi13Handshake() {
     super("13");
+  }
+
+  @Override
+  public WebSocket getWebSocket(HttpEvent event) throws IOException {
+    return Hybi13Socket.from(event);
   }
 
   @Override
