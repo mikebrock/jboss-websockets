@@ -22,7 +22,7 @@
 
     <groupId>org.jboss.as</groupId>
     <artifactId>jboss-as-websockets</artifactId>
-    <version>0.1.Alpha5</version>
+    <version>0.1-SNAPSHOT</version>
     <name>WebSockets for JBoss AS</name>
     <description>WebSockets for JBoss AS 7.1+</description>
     <url>http://www.jboss.org/</url>
