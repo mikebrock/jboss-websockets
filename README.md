@@ -50,7 +50,6 @@ Example Implementation:
     }
 
 
-
 Errata:
 -------
 
@@ -58,18 +57,15 @@ Errata:
 
 2. Message fragmentation is not yet supported.
 
-3. Only Hybi-07 and its variants (particularly Hybi-13 and the final spec RFC 6455) are working -- minus the above 
-   missing features. 
+3. Hybi-00 implemented, but it require a patched version of JBossWeb. Patch for JBossWeb included in root.
 
 Known Compatibility
 ----------------------
 - Confirmed Working:
  - Chrome 18
  - Firefox 11
-   
-- Confirmed Broken:
- - All versions of Safari (still uses Hybi-00)
- - All versions of MobileSafari
+ - Safari 5.1
+ - MobileSafari on iOS 5.1
 
 Want to Contribute?
 -------------------
