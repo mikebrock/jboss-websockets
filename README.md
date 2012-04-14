@@ -57,8 +57,6 @@ Errata:
 
 2. Message fragmentation is not yet supported.
 
-3. Hybi-00 implemented, but it require a patched version of JBossWeb. Patch for JBossWeb included in root.
-
 Known Compatibility
 ----------------------
 - Confirmed Working:
