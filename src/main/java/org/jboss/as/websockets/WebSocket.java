@@ -16,6 +16,8 @@
 
 package org.jboss.as.websockets;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
@@ -51,4 +53,26 @@ public interface WebSocket {
    * @throws IOException
    */
   public String readTextFrame() throws IOException;
+
+
+  /**
+   * Return the HTTP Session with which this WebSocket is associated.
+   * @return an instance of the HttpSession
+   */
+  public HttpSession getHttpSession();
+
+
+  /**
+   * Get an instance of the initial ServletRequest which was responsible for opening this WebSocket. Note: that
+   * this object remains the same for the duration of the WebSocket session. There is <strong>no</strong> unique
+   * request associated with individual websocket frames.
+   *
+   * @return an instance of the HttpServletRequest which opened this WebSocket.
+   */
+  public HttpServletRequest getServletRequest();
+
+  /**
+   * Terminates the connection with the client and closes the socket.
+   */
+  public void closeSocket() throws IOException;
 }

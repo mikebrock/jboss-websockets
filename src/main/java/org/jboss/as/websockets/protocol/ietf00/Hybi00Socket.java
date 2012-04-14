@@ -18,10 +18,11 @@ package org.jboss.as.websockets.protocol.ietf00;
 
 import org.jboss.as.websockets.AbstractWebSocket;
 import org.jboss.as.websockets.WebSocket;
-import org.jboss.servlet.http.HttpEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,26 +30,29 @@ import java.io.OutputStream;
 /**
  * The Hybi-00 Framing Protocol implementation.
  *
- * @see Hybi00Handshake
  * @author Mike Brock
+ * @see Hybi00Handshake
  */
 public class Hybi00Socket extends AbstractWebSocket {
-  private final InputStream inputStream;
-  private final OutputStream outputStream;
-  private final int MAX_FRAME_SIZE = 1024 * 32; //32kb
+  private final static int MAX_FRAME_SIZE = 1024 * 32; //32kb
 
-
-  private static final Logger log = LoggerFactory.getLogger(Hybi00Socket.class);
-
-  private Hybi00Socket(final InputStream inputStream, final OutputStream outputStream) {
-    this.inputStream = inputStream;
-    this.outputStream = outputStream;
+  private Hybi00Socket(final HttpServletRequest servletRequest,
+                       final InputStream inputStream,
+                       final OutputStream outputStream,
+                       final ClosingStrategy closingStrategy) {
+    super(servletRequest, inputStream, outputStream, closingStrategy);
   }
 
-  public static WebSocket from(final HttpEvent event) throws IOException {
+  public static WebSocket from(final HttpServletRequest request,
+                               final HttpServletResponse response,
+                               final ClosingStrategy closingStrategy)
+          throws IOException {
+
     return new Hybi00Socket(
-            event.getHttpServletRequest().getInputStream(),
-            event.getHttpServletResponse().getOutputStream());
+            request,
+            request.getInputStream(),
+            response.getOutputStream(),
+            closingStrategy);
   }
 
   public void writeTextFrame(final String text) throws IOException {
@@ -83,4 +87,5 @@ public class Hybi00Socket extends AbstractWebSocket {
       throw new RuntimeException("bad websockets payload");
     }
   }
+
 }

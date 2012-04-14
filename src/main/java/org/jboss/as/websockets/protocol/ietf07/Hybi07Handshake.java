@@ -20,6 +20,7 @@ package org.jboss.as.websockets.protocol.ietf07;
 import org.jboss.as.websockets.Handshake;
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 import org.jboss.as.websockets.util.Base64;
 import org.jboss.servlet.http.HttpEvent;
 
@@ -52,8 +53,10 @@ public class Hybi07Handshake extends Handshake {
   }
 
   @Override
-  public WebSocket getWebSocket(HttpEvent event) throws IOException {
-    return Hybi07Socket.from(event);
+  public WebSocket getWebSocket(final HttpServletRequest request,
+                                 final HttpServletResponse response,
+                                 final ClosingStrategy closingStrategy) throws IOException {
+    return Hybi07Socket.from(request, response, closingStrategy);
   }
 
   @Override

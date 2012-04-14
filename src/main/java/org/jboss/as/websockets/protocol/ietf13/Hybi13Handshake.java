@@ -18,6 +18,7 @@ package org.jboss.as.websockets.protocol.ietf13;
 
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 import org.jboss.as.websockets.protocol.ietf07.Hybi07Handshake;
 import org.jboss.servlet.http.HttpEvent;
 
@@ -41,8 +42,10 @@ public class Hybi13Handshake extends Hybi07Handshake {
   }
 
   @Override
-  public WebSocket getWebSocket(HttpEvent event) throws IOException {
-    return Hybi13Socket.from(event);
+  public WebSocket getWebSocket(final HttpServletRequest request,
+                                   final HttpServletResponse response,
+                                   final ClosingStrategy closingStrategy) throws IOException {
+    return Hybi13Socket.from(request, response, closingStrategy);
   }
 
   @Override

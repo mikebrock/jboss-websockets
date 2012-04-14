@@ -16,9 +16,11 @@
 
 package org.jboss.as.websockets;
 
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 import org.jboss.servlet.http.HttpEvent;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -51,7 +53,9 @@ public abstract class Handshake {
     return "ws://" + request.getHeader("Host") + request.getRequestURI();
   }
 
-  public abstract WebSocket getWebSocket(HttpEvent event) throws IOException;
+  public abstract WebSocket getWebSocket(HttpServletRequest request,
+                                         HttpServletResponse response,
+                                         ClosingStrategy closingStrategy) throws IOException;
 
   public abstract boolean matches(HttpServletRequest request);
 

@@ -2,10 +2,10 @@ package org.jboss.as.websockets.protocol.ietf13;
 
 import org.jboss.as.websockets.AbstractWebSocket;
 import org.jboss.as.websockets.WebSocket;
-import org.jboss.as.websockets.protocol.ietf07.Hybi07Socket;
-import org.jboss.as.websockets.util.Hash;
-import org.jboss.servlet.http.HttpEvent;
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,21 +14,20 @@ import java.io.OutputStream;
  * @author Mike Brock
  */
 public class Hybi13Socket extends AbstractWebSocket {
-  private final HttpEvent event;
-  private final InputStream inputStream;
-  private final OutputStream outputStream;
 
-  public Hybi13Socket(HttpEvent event, InputStream inputStream, OutputStream outputStream) {
-    this.event = event;
-    this.inputStream = inputStream;
-    this.outputStream = outputStream;
-  }
+  public Hybi13Socket(final HttpServletRequest servletRequest,
+                        final InputStream inputStream,
+                        final OutputStream outputStream,
+                        final ClosingStrategy closingStrategy) {
+      super(servletRequest, inputStream, outputStream, closingStrategy);
 
-  public static WebSocket from(final HttpEvent event) throws IOException {
-    return new Hybi13Socket(
-            event,
-            event.getHttpServletRequest().getInputStream(),
-            event.getHttpServletResponse().getOutputStream());
+    }
+
+  public static WebSocket from(final HttpServletRequest request,
+                                 final HttpServletResponse response,
+                                 final ClosingStrategy closingStrategy) throws IOException {
+
+    return new Hybi13Socket(request, request.getInputStream(), response.getOutputStream(), closingStrategy);
   }
 
   private static final byte FRAME_FIN = Byte.MIN_VALUE;
@@ -95,7 +94,7 @@ public class Hybi13Socket extends AbstractWebSocket {
         }
         break;
       case OPCODE_CONNECTION_CLOSE:
-        event.close();
+        closeSocket();
         break;
 
       case OPCODE_PING:
@@ -111,21 +110,7 @@ public class Hybi13Socket extends AbstractWebSocket {
     return payloadBuffer.toString();
   }
 
-//  private final static String secureRandomAlgorithm = "SHA1PRNG";
-//  final static SecureRandom random;
-//
-//  static {
-//    try {
-//      random = SecureRandom.getInstance(secureRandomAlgorithm);
-//      random.setSeed(SecureRandom.getInstance(secureRandomAlgorithm).generateSeed(64));
-//    }
-//    catch (NoSuchAlgorithmException e) {
-//      throw new RuntimeException("runtime does not support secure random algorithm: " + secureRandomAlgorithm);
-//    }
-//  }
-
   private void _writeTextFrame(final String txt) throws IOException {
- //   System.out.println("Write Hybi-13 Frame <<" + txt + ">>");
 
     byte[] strBytes = txt.getBytes("UTF-8");
     final int len = strBytes.length;

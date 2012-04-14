@@ -19,6 +19,7 @@ package org.jboss.as.websockets.servlet;
 import org.jboss.as.websockets.Handshake;
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 import org.jboss.as.websockets.protocol.ietf00.Hybi00Handshake;
 import org.jboss.as.websockets.protocol.ietf07.Hybi07Handshake;
 import org.jboss.as.websockets.protocol.ietf08.Hybi08Handshake;
@@ -26,7 +27,6 @@ import org.jboss.as.websockets.protocol.ietf13.Hybi13Handshake;
 import org.jboss.servlet.http.HttpEvent;
 import org.jboss.servlet.http.HttpEventServlet;
 import org.jboss.servlet.http.UpgradableHttpServletResponse;
-import org.omg.CORBA.TIMEOUT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +36,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -71,6 +69,12 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
    */
   private static final String SESSION_WEBSOCKET_HANDLE = "JBoss:Experimental:Websocket:Handle";
 
+  /**
+   * Sets the standard upgrade headers that are common to all HTTP 101 upgrades, as well as the
+   * SEC_WEBSOCKETS_PROTOCOL header (if the protocol is specified) common to all WebSocket implementations.
+   *
+   * @param response
+   */
   private void setStandardUpgradeHeaders(final HttpServletResponse response) {
     response.setHeader("Upgrade", "WebSocket");
     response.setHeader("Connection", "Upgrade");
@@ -82,6 +86,13 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
     }
   }
 
+  /**
+   * Handle an event from the web container.
+   *
+   * @param event
+   * @throws IOException
+   * @throws ServletException
+   */
   public final void event(final HttpEvent event) throws IOException, ServletException {
     final HttpServletRequest request = event.getHttpServletRequest();
     final HttpServletResponse response = event.getHttpServletResponse();
@@ -90,41 +101,57 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
       case BEGIN:
         event.setTimeout(20000);
 
+        /**
+         * Check to see if this request is an HTTP Upgrade request.
+         */
         if (response instanceof UpgradableHttpServletResponse) {
+
+          /**
+           * Interrogate the request with the available handshakes.
+           */
           for (Handshake handshake : websocketHandshakes) {
             if (handshake.matches(request)) {
+              /**
+               * We found a matching handshake, so let's tell the web server we'd like to begin the process of
+               * upgrading this connection to a WebSocket.
+               */
               ((UpgradableHttpServletResponse) response).startUpgrade();
 
-              try {
-                log.debug("Found a compatible handshake: (Version:"
-                        + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
+              log.debug("Found a compatible handshake: (Version:"
+                      + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
 
-                setStandardUpgradeHeaders(response);
-                /**
-                 * Generate the server handshake response -- setting the necessary headers and also capturing
-                 * any data bound for the body of the response.
-                 */
+              setStandardUpgradeHeaders(response);
+              /**
+               * Generate the server handshake response -- setting the necessary headers and also capturing
+               * any data bound for the body of the response.
+               */
 
-                final byte[] handShakeData = handshake.generateResponse(event);
+              final byte[] handShakeData = handshake.generateResponse(event);
 
-                // write the handshake data
-                event.getHttpServletResponse().getOutputStream().write(handShakeData);
+              // write the handshake data
+              event.getHttpServletResponse().getOutputStream().write(handShakeData);
 
-                /**
-                 * Obtain an WebSocket instance from the handshaker.
-                 */
-                final WebSocket webSocket = handshake.getWebSocket(event);
+              /**
+               * Obtain an WebSocket instance from the handshaker.
+               */
+              final WebSocket webSocket
+                      = handshake.getWebSocket(event.getHttpServletRequest(), event.getHttpServletResponse(),
+                      new ClosingStrategy() {
+                        public void doClose() throws IOException{
+                          event.close();
+                        }
+                      });
 
-                log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
+              log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
 
-                request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
+              /**
+               * Record a reference to this WebSocket into the HttpServletRequest so it can be re-referenced
+               * on READ, ERROR, and EOF events.
+               */
+              request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
-                ((UpgradableHttpServletResponse) response).sendUpgrade();
-                onSocketOpened(event, webSocket);
-              }
-              catch (Throwable t) {
-                t.printStackTrace();
-              }
+              ((UpgradableHttpServletResponse) response).sendUpgrade();
+              onSocketOpened(webSocket);
             }
           }
         }
@@ -140,7 +167,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
       case EVENT:
       case READ:
         while (event.isReadReady()) {
-          onReceivedTextFrame(event, (WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
+          onReceivedTextFrame((WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
         }
         break;
 
@@ -149,7 +176,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
         break;
 
       case EOF:
-        onSocketClosed(event, (WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
+        onSocketClosed((WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
         break;
 
     }
@@ -215,7 +242,8 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
    * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation. This is
    * not thread-safe. It should only be set from the init() method of the servlet.
    *
-   * @param protocol
+   * @param protocol the protocol string to be advertised in the Sec-WebSocket-Protocol header when clients negotiate
+   *                 a new websocket.
    */
   protected void setProtocolName(final String protocol) {
     this.protocolName = protocol;
@@ -224,27 +252,26 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   /**
    * Called when a new websocket is opened.
    *
-   * @param event  The HttpEvent associated with the WebSocket Upgrade.
    * @param socket A reference to the WebSocket writer interface
    * @throws IOException
    */
-  protected abstract void onSocketOpened(final HttpEvent event, final WebSocket socket) throws IOException;
+  protected void onSocketOpened(final WebSocket socket) throws IOException {
+  }
 
   /**
    * Called when the websocket is closed.
    *
-   * @param event The HttpEvent associated with the socket closure.
    * @throws IOException
    */
-  protected abstract void onSocketClosed(final HttpEvent event, final WebSocket socket) throws IOException;
+  protected void onSocketClosed(final WebSocket socket) throws IOException {
+  }
 
   /**
    * Called when a new text frame is received.
    *
-   * @param event  The HttpEvent associated with <em>original</em> WebSocket Upgrade.
    * @param socket A reference to the WebSocket writer interface associated with this socket.
    * @throws IOException
    */
-  protected abstract void onReceivedTextFrame(final HttpEvent event, final WebSocket socket) throws IOException;
-
+  protected void onReceivedTextFrame(final WebSocket socket) throws IOException{
+  }
 }

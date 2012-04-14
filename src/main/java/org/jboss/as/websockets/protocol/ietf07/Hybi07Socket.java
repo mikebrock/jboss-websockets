@@ -18,16 +18,15 @@ package org.jboss.as.websockets.protocol.ietf07;
 
 import org.jboss.as.websockets.AbstractWebSocket;
 import org.jboss.as.websockets.WebSocket;
-import org.jboss.as.websockets.protocol.ietf00.Hybi00Socket;
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 import org.jboss.as.websockets.util.Hash;
-import org.jboss.servlet.http.HttpEvent;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
 
 /**
  * Implementation of the Hybi-07 Websocket Framing Protocol.
@@ -35,29 +34,30 @@ import java.util.Arrays;
  * @author Mike Brock
  */
 public class Hybi07Socket extends AbstractWebSocket {
-  private final HttpEvent event;
-  private final InputStream inputStream;
-  private final OutputStream outputStream;
 
-  public Hybi07Socket(HttpEvent event, InputStream inputStream, OutputStream outputStream) {
-    this.event = event;
-    this.inputStream = inputStream;
-    this.outputStream = outputStream;
+  public Hybi07Socket(final HttpServletRequest servletRequest,
+                      final InputStream inputStream,
+                      final OutputStream outputStream,
+                      final ClosingStrategy closingStrategy) {
+    super(servletRequest, inputStream, outputStream, closingStrategy);
+
   }
 
-  public static WebSocket from(final HttpEvent event) throws IOException {
+  public static WebSocket from(final HttpServletRequest request,
+                               final HttpServletResponse response,
+                               final ClosingStrategy closingStrategy) throws IOException {
+
     return new Hybi07Socket(
-            event,
-            event.getHttpServletRequest().getInputStream(),
-            event.getHttpServletResponse().getOutputStream());
+            request,
+            request.getInputStream(),
+            response.getOutputStream(),
+            closingStrategy);
   }
 
-  private static final byte FRAME_FIN = Byte.MIN_VALUE;
   private static final byte FRAME_OPCODE = 127;
   private static final byte FRAME_MASKED = Byte.MIN_VALUE;
   private static final byte FRAME_LENGTH = 127;
 
-  private static final int OPCODE_CONTINUATION = 0;
   private static final int OPCODE_TEXT = 1;
   private static final int OPCODE_BINARY = 2;
   private static final int OPCODE_CONNECTION_CLOSE = 3;
@@ -116,7 +116,7 @@ public class Hybi07Socket extends AbstractWebSocket {
         }
         break;
       case OPCODE_CONNECTION_CLOSE:
-        event.close();
+        closeSocket();
         break;
 
       case OPCODE_PING:
@@ -132,18 +132,6 @@ public class Hybi07Socket extends AbstractWebSocket {
     return payloadBuffer.toString();
   }
 
-//  private final static String secureRandomAlgorithm = "SHA1PRNG";
-//  final static SecureRandom random;
-//
-//  static {
-//    try {
-//      random = SecureRandom.getInstance(secureRandomAlgorithm);
-//      random.setSeed(SecureRandom.getInstance(secureRandomAlgorithm).generateSeed(64));
-//    }
-//    catch (NoSuchAlgorithmException e) {
-//      throw new RuntimeException("runtime does not support secure random algorithm: " + secureRandomAlgorithm);
-//    }
-//  }
 
   private void _writeTextFrame(final String txt) throws IOException {
     byte[] strBytes = txt.getBytes("UTF-8");
@@ -199,5 +187,13 @@ public class Hybi07Socket extends AbstractWebSocket {
 
   public String readTextFrame() throws IOException {
     return _readTextFrame();
+  }
+
+  public HttpSession getHttpSession() {
+    return servletRequest.getSession();
+  }
+
+  public HttpServletRequest getServletRequest() {
+    return servletRequest;
   }
 }

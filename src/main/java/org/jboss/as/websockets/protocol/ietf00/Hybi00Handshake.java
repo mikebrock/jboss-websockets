@@ -19,18 +19,17 @@ package org.jboss.as.websockets.protocol.ietf00;
 import org.jboss.as.websockets.Handshake;
 import org.jboss.as.websockets.WebSocket;
 import org.jboss.as.websockets.WebSocketHeaders;
+import org.jboss.as.websockets.protocol.ClosingStrategy;
 import org.jboss.servlet.http.HttpEvent;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_KEY1;
 import static org.jboss.as.websockets.WebSocketHeaders.SEC_WEBSOCKET_KEY2;
@@ -49,8 +48,10 @@ public class Hybi00Handshake extends Handshake {
   }
 
   @Override
-  public WebSocket getWebSocket(HttpEvent event) throws IOException {
-    return Hybi00Socket.from(event);
+  public WebSocket getWebSocket(final HttpServletRequest request,
+                                   final HttpServletResponse response,
+                                   final ClosingStrategy closingStrategy) throws IOException {
+    return Hybi00Socket.from(request, response, closingStrategy);
   }
 
   @Override

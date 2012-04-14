@@ -16,19 +16,53 @@
 
 package org.jboss.as.websockets;
 
+import org.jboss.as.websockets.protocol.ClosingStrategy;
+import org.jboss.as.websockets.util.Assert;
 import org.jboss.as.websockets.util.Hash;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @author Mike Brock
  */
 public abstract class AbstractWebSocket implements WebSocket {
   protected final String webSocketId;
+  protected final HttpServletRequest servletRequest;
+  protected final InputStream inputStream;
+  protected final OutputStream outputStream;
+  protected final ClosingStrategy closingStrategy;
 
-  protected AbstractWebSocket() {
-    webSocketId = Hash.newUniqueHash();
+  protected AbstractWebSocket(
+          final HttpServletRequest servletRequest,
+          final InputStream inputStream,
+          final OutputStream outputStream,
+          final ClosingStrategy closingStrategy) {
+
+    this.webSocketId = Hash.newUniqueHash();
+    this.servletRequest = Assert.notNull(servletRequest, "servletRequest must NOT be null");
+    this.inputStream = Assert.notNull(inputStream, "inputStream must NOT be null");
+    this.outputStream = Assert.notNull(outputStream, "outputStream must NOT be null");
+    this.closingStrategy = Assert.notNull(closingStrategy, "closingStrategy must NOT be null");
   }
 
   public final String getSocketID() {
     return webSocketId;
+  }
+
+
+  public HttpSession getHttpSession() {
+    return servletRequest.getSession();
+  }
+
+  public HttpServletRequest getServletRequest() {
+    return servletRequest;
+  }
+
+  public void closeSocket() throws IOException {
+    closingStrategy.doClose();
   }
 }
