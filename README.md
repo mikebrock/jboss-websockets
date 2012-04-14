@@ -31,17 +31,17 @@ Example Implementation:
     public class MyWebSocketServlet extends WebSocketServlet {
 
       @Override
-      protected void onSocketOpened(HttpEvent event, WebSocket socket) throws IOException {
+      protected void onSocketOpened(WebSocket socket) throws IOException {
         System.out.println("Websocket opened :)");
       }
 
       @Override
-      protected void onSocketClosed(HttpEvent event, WebSocket socket) throws IOException {
+      protected void onSocketClosed(WebSocket socket) throws IOException {
         System.out.println("Websocket closed :(");
       }
 
       @Override
-      protected void onReceivedTextFrame(HttpEvent event, final WebSocket socket) throws IOException {
+      protected void onReceivedTextFrame(WebSocket socket) throws IOException {
         final String text = socket.readTextFrame();
         if ("Hello".equals(text)) {
           socket.writeTextFrame("Hey, there!");
