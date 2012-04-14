@@ -64,7 +64,7 @@
             <artifactId>jbossweb</artifactId>
             <scope>provided</scope>
             <!-- TODO: don't hard code this -->
-            <version>7.0.0.SNAPSHOT</version>
+            <version>7.0.14.WebSocketsR0</version>
         </dependency>
 
         <dependency>

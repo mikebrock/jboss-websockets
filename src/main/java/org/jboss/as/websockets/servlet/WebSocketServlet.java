@@ -26,6 +26,7 @@ import org.jboss.as.websockets.protocol.ietf13.Hybi13Handshake;
 import org.jboss.servlet.http.HttpEvent;
 import org.jboss.servlet.http.HttpEventServlet;
 import org.jboss.servlet.http.UpgradableHttpServletResponse;
+import org.omg.CORBA.TIMEOUT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,39 +90,41 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
       case BEGIN:
         event.setTimeout(20000);
 
-        log.debug("Begin Websocket Handshake");
-
         if (response instanceof UpgradableHttpServletResponse) {
           for (Handshake handshake : websocketHandshakes) {
             if (handshake.matches(request)) {
-              setStandardUpgradeHeaders(response);
+              ((UpgradableHttpServletResponse) response).startUpgrade();
 
-              log.debug("Found a compatible handshake: (Version:"
-                      + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
+              try {
+                log.debug("Found a compatible handshake: (Version:"
+                        + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
 
-              /**
-               * Generate the server handshake response -- setting the necessary headers and also capturing
-               * any data bound for the body of the response.
-               */
-              final byte[] handShakeData = handshake.generateResponse(event);
+                setStandardUpgradeHeaders(response);
+                /**
+                 * Generate the server handshake response -- setting the necessary headers and also capturing
+                 * any data bound for the body of the response.
+                 */
 
-              /**
-               * Obtain an WebSocket instance from the handshaker.
-               */
-              final WebSocket webSocket = handshake.getWebSocket(event);
+                final byte[] handShakeData = handshake.generateResponse(event);
 
-              log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
+                // write the handshake data
+                event.getHttpServletResponse().getOutputStream().write(handShakeData);
 
-              request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
+                /**
+                 * Obtain an WebSocket instance from the handshaker.
+                 */
+                final WebSocket webSocket = handshake.getWebSocket(event);
 
-              /**
-               * Transition the request from HTTP to a persistent socket.
-               */
-              ((UpgradableHttpServletResponse) response).sendUpgrade(handShakeData);
+                log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
 
-              log.debug("Websocket opened for session: " + request.getSession().getId());
+                request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
 
-              onSocketOpened(event, webSocket);
+                ((UpgradableHttpServletResponse) response).sendUpgrade();
+                onSocketOpened(event, webSocket);
+              }
+              catch (Throwable t) {
+                t.printStackTrace();
+              }
             }
           }
         }
