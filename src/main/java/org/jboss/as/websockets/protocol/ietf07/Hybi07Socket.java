@@ -65,12 +65,6 @@ public class Hybi07Socket extends AbstractWebSocket {
   private static final byte FRAME_MASKED = Byte.MIN_VALUE;
   private static final byte FRAME_LENGTH = 127;
 
-  private static final int OPCODE_TEXT = 1;
-  private static final int OPCODE_BINARY = 2;
-  private static final int OPCODE_CONNECTION_CLOSE = 3;
-  private static final int OPCODE_PING = 4;
-  private static final int OPCODE_PONG = 5;
-
   private FrameType getNextFrameType() throws IOException {
     switch ((inputStream.read() & FRAME_OPCODE)) {
       case 0x00:
