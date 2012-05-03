@@ -17,12 +17,14 @@
 package org.jboss.as.websockets.protocol.ietf00;
 
 import org.jboss.as.websockets.AbstractWebSocket;
+import org.jboss.as.websockets.Frame;
+import org.jboss.as.websockets.FrameType;
 import org.jboss.as.websockets.WebSocket;
+import org.jboss.as.websockets.frame.TextFrame;
 import org.jboss.as.websockets.protocol.ClosingStrategy;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -63,7 +65,7 @@ public class Hybi00Socket extends AbstractWebSocket {
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
-  public String readTextFrame() throws IOException {
+  private String _readTextFrame() throws IOException {
     byte frametype = (byte) inputStream.read();
 
     if ((frametype & 0x80) == 0x80) {
@@ -88,4 +90,13 @@ public class Hybi00Socket extends AbstractWebSocket {
     }
   }
 
+  public void writeFrame(Frame frame) throws IOException {
+    if (frame.getType() == FrameType.Text) {
+      writeTextFrame(((TextFrame) frame).getText());
+    }
+  }
+
+  public Frame readFrame() throws IOException {
+    return TextFrame.from(_readTextFrame());
+  }
 }

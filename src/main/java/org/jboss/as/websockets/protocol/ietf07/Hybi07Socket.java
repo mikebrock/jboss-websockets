@@ -17,7 +17,14 @@
 package org.jboss.as.websockets.protocol.ietf07;
 
 import org.jboss.as.websockets.AbstractWebSocket;
+import org.jboss.as.websockets.Frame;
+import org.jboss.as.websockets.FrameType;
 import org.jboss.as.websockets.WebSocket;
+import org.jboss.as.websockets.frame.BinaryFrame;
+import org.jboss.as.websockets.frame.CloseFrame;
+import org.jboss.as.websockets.frame.PingFrame;
+import org.jboss.as.websockets.frame.PongFrame;
+import org.jboss.as.websockets.frame.TextFrame;
 import org.jboss.as.websockets.protocol.ClosingStrategy;
 import org.jboss.as.websockets.util.Hash;
 
@@ -64,15 +71,26 @@ public class Hybi07Socket extends AbstractWebSocket {
   private static final int OPCODE_PING = 4;
   private static final int OPCODE_PONG = 5;
 
-  @SuppressWarnings("ResultOfMethodCallIgnored")
-  private String _readTextFrame() throws IOException {
-    //TODO: check the first bit?
-    int b = inputStream.read();
-    final int opcode = (b & FRAME_OPCODE);
+  private FrameType getNextFrameType() throws IOException {
+    switch ((inputStream.read() & FRAME_OPCODE)) {
+      case 0x00:
+        return FrameType.Continuation;
+      case 0x01:
+        return FrameType.Text;
+      case 0x02:
+        return FrameType.Binary;
+      case 0x08:
+        return FrameType.ConnectionClose;
+      case 0x09:
+        return FrameType.Ping;
+      case 0x0A:
+        return FrameType.Pong;
+      default:
+        return FrameType.Unknown;
+    }
+  }
 
-    b = inputStream.read();
-    final boolean frameMasked = (b & FRAME_MASKED) != 0;
-
+  private int getPayloadSize(int b) throws IOException {
     int payloadLength = (b & FRAME_LENGTH);
     if (payloadLength == 126) {
       payloadLength = ((inputStream.read() & 0xFF) << 8) +
@@ -90,6 +108,16 @@ public class Hybi07Socket extends AbstractWebSocket {
               ((inputStream.read() & 0xFF));
     }
 
+    return payloadLength;
+  }
+
+
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  private String _readTextFrame() throws IOException {
+    int b = inputStream.read();
+    final boolean frameMasked = (b & FRAME_MASKED) != 0;
+    int payloadLength = getPayloadSize(b);
+
     final byte[] frameMaskingKey = new byte[4];
 
     if (frameMasked) {
@@ -97,39 +125,57 @@ public class Hybi07Socket extends AbstractWebSocket {
     }
 
     final StringBuilder payloadBuffer = new StringBuilder(payloadLength);
-    switch (opcode) {
-      case OPCODE_TEXT:
-        int read = 0;
-        if (frameMasked) {
-          do {
-            payloadBuffer.append(((char) ((inputStream.read() ^ frameMaskingKey[read % 4]) & 127)));
-          }
-          while (++read < payloadLength);
-        }
-        else {
-          // support unmasked frames for testing.
 
-          do {
-            payloadBuffer.append((char) inputStream.read());
-          }
-          while (++read < payloadLength);
-        }
-        break;
-      case OPCODE_CONNECTION_CLOSE:
-        closeSocket();
-        break;
+    int read = 0;
+    if (frameMasked) {
+      do {
+        payloadBuffer.append(((char) ((inputStream.read() ^ frameMaskingKey[read % 4]) & 127)));
+      }
+      while (++read < payloadLength);
+    }
+    else {
+      // support unmasked frames for testing.
 
-      case OPCODE_PING:
-      case OPCODE_PONG:
-        break;
-
-      case OPCODE_BINARY:
-        // binary transmission not yet supported
-        throw new RuntimeException("binary frame not yet supported");
+      do {
+        payloadBuffer.append((char) inputStream.read());
+      }
+      while (++read < payloadLength);
     }
 
-
     return payloadBuffer.toString();
+  }
+
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  public byte[] _readBinaryFrame() throws IOException {
+    int b = inputStream.read();
+    final boolean frameMasked = (b & FRAME_MASKED) != 0;
+    int payloadLength = getPayloadSize(b);
+
+    final byte[] frameMaskingKey = new byte[4];
+
+    if (frameMasked) {
+      inputStream.read(frameMaskingKey);
+    }
+
+    final byte[] buf = new byte[payloadLength];
+
+    int read = 0;
+    if (frameMasked) {
+      do {
+        buf[read] = (byte) ((inputStream.read() ^ frameMaskingKey[read % 4]) & 127);
+      }
+      while (++read < payloadLength);
+    }
+    else {
+      // support unmasked frames for testing.
+
+      do {
+        buf[read] = (byte) inputStream.read();
+      }
+      while (++read < payloadLength);
+    }
+
+    return buf;
   }
 
 
@@ -181,12 +227,99 @@ public class Hybi07Socket extends AbstractWebSocket {
     outputStream.flush();
   }
 
-  public void writeTextFrame(String text) throws IOException {
-    _writeTextFrame(text);
+  private void _writeBinaryFrame(final byte[] data) throws IOException {
+    final int len = data.length;
+
+    outputStream.write(-126);
+    if (data.length > Short.MAX_VALUE) {
+      outputStream.write(127);
+
+      // pad the first 4 bytes of 64-bit context length. If this frame is larger than 2GB, you're in trouble. =)
+      outputStream.write(0);
+      outputStream.write(0);
+      outputStream.write(0);
+      outputStream.write(0);
+      outputStream.write((len & 0xFF) << 24);
+      outputStream.write((len & 0xFF) << 16);
+      outputStream.write((len & 0xFF) << 8);
+      outputStream.write((len & 0xFF));
+    }
+    else if (data.length > 125) {
+      outputStream.write(126);
+      outputStream.write(((len >> 8) & 0xFF));
+      outputStream.write(((len) & 0xFF));
+    }
+    else {
+      outputStream.write((len & 127));
+    }
+
+    final byte[] mask = new byte[4];
+    Hash.getRandomBytes(mask);
+    outputStream.write(mask);
+
+    for (int j = 0; j < len; j++) {
+      outputStream.write((data[j] ^ mask[j % 4]));
+    }
+
+    outputStream.flush();
   }
 
-  public String readTextFrame() throws IOException {
-    return _readTextFrame();
+  private void _sendConnectionClose() throws IOException {
+    outputStream.write(-120);
+    outputStream.write(125);
+    outputStream.flush();
+  }
+
+  private void _sendPing() throws IOException {
+    outputStream.write(-119);
+    outputStream.write(125);
+    outputStream.flush();
+  }
+
+  private void _sendPong() throws IOException {
+    outputStream.write(-118);
+    outputStream.write(125);
+    outputStream.flush();
+  }
+
+  public Frame readFrame() throws IOException {
+    switch (getNextFrameType()) {
+      case Text:
+        return TextFrame.from(_readTextFrame());
+      case Binary:
+        return BinaryFrame.from(_readBinaryFrame());
+      case Ping:
+        return new PingFrame();
+      case Pong:
+        return new PongFrame();
+      case ConnectionClose:
+        closeSocket();
+        return new CloseFrame();
+    }
+    throw new IOException("unknown frame type");
+  }
+
+
+  public void writeFrame(Frame frame) throws IOException {
+    switch (frame.getType()) {
+      case Text:
+        _writeTextFrame(((TextFrame) frame).getText());
+        break;
+      case Binary:
+        _writeBinaryFrame(((BinaryFrame) frame).getByteArray());
+        break;
+      case ConnectionClose:
+        _sendConnectionClose();
+        break;
+      case Ping:
+        _sendPing();
+        break;
+      case Pong:
+        _sendPong();
+        break;
+      default:
+        throw new IOException("unable to handle frame type: " + frame.getType());
+    }
   }
 
   public HttpSession getHttpSession() {

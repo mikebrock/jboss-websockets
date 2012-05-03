@@ -53,12 +53,12 @@ public abstract class AbstractWebSocket implements WebSocket {
     return webSocketId;
   }
 
-
   public HttpSession getHttpSession() {
     return servletRequest.getSession();
   }
 
   public HttpServletRequest getServletRequest() {
+
     return servletRequest;
   }
 

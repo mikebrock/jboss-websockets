@@ -52,7 +52,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
 
   private static final Logger log = LoggerFactory.getLogger(WebSocketServlet.class);
 
-  private String protocolName;
+  private final String protocolName;
 
   static {
     final List<Handshake> handshakeList = new ArrayList<Handshake>();
@@ -65,9 +65,24 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   }
 
   /**
-   * An attribute name to stuff WebSocket handles into the sessions with.
+   * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation. This is
+   * not thread-safe. It should only be set from the init() method of the servlet.
+   *
+   * @param protocolName the protocol string to be advertised in the Sec-WebSocket-Protocol header when clients negotiate
+   *                 a new websocket.
    */
-  private static final String SESSION_WEBSOCKET_HANDLE = "JBoss:Experimental:Websocket:Handle";
+  protected WebSocketServlet(String protocolName) {
+    this.protocolName = protocolName;
+  }
+
+  protected WebSocketServlet() {
+    this.protocolName = null;
+  }
+
+  /**
+   * An attribute name to stuff WebSocket handles into the request attributes with.
+   */
+  private static final String SESSION_WEBSOCKET_HANDLE = "JBoss:AS:WebSocket:Handle";
 
   /**
    * Sets the standard upgrade headers that are common to all HTTP 101 upgrades, as well as the
@@ -121,11 +136,11 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
                       + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
 
               setStandardUpgradeHeaders(response);
+
               /**
                * Generate the server handshake response -- setting the necessary headers and also capturing
                * any data bound for the body of the response.
                */
-
               final byte[] handShakeData = handshake.generateResponse(event);
 
               // write the handshake data
@@ -167,7 +182,7 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
       case EVENT:
       case READ:
         while (event.isReadReady()) {
-          onReceivedTextFrame((WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
+          onReceivedFrame((WebSocket) request.getAttribute(SESSION_WEBSOCKET_HANDLE));
         }
         break;
 
@@ -239,17 +254,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   //
 
   /**
-   * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation. This is
-   * not thread-safe. It should only be set from the init() method of the servlet.
-   *
-   * @param protocol the protocol string to be advertised in the Sec-WebSocket-Protocol header when clients negotiate
-   *                 a new websocket.
-   */
-  protected void setProtocolName(final String protocol) {
-    this.protocolName = protocol;
-  }
-
-  /**
    * Called when a new websocket is opened.
    *
    * @param socket A reference to the WebSocket writer interface
@@ -272,6 +276,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
    * @param socket A reference to the WebSocket writer interface associated with this socket.
    * @throws IOException
    */
-  protected void onReceivedTextFrame(final WebSocket socket) throws IOException{
+  protected void onReceivedFrame(final WebSocket socket) throws IOException{
   }
 }

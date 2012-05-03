@@ -39,20 +39,21 @@ public interface WebSocket {
   public String getSocketID();
 
   /**
-   * Write an text frame to the websocket. All String data will be UTF-8 encoded on the wire.
+   * Read a single frame from the socket.
    *
-   * @param text the UTF-8 text string
+   * @return
    * @throws IOException
    */
-  public void writeTextFrame(String text) throws IOException;
+  public Frame readFrame() throws IOException;
+
 
   /**
-   * Read a single text frame -- if available.
+   * Write a frame to the socket.
    *
-   * @return the UTF-8 text payload string.
+   * @param frame
    * @throws IOException
    */
-  public String readTextFrame() throws IOException;
+  public void writeFrame(Frame frame) throws IOException;
 
 
   /**

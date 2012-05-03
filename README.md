@@ -41,10 +41,13 @@ Example Implementation:
       }
 
       @Override
-      protected void onReceivedTextFrame(WebSocket socket) throws IOException {
-        final String text = socket.readTextFrame();
-        if ("Hello".equals(text)) {
-          socket.writeTextFrame("Hey, there!");
+      protected void onReceivedFrame(WebSocket socket) throws IOException {
+        final Frame frame = socket.readFrame();
+        if (frame instanceof TextFrame) {
+          final String text = ((TextFrame) frame).getText();
+          if ("Hello".equals(text)) {
+            socket.writeFrame(new TextFrame("Hey, there!"));
+          }
         }
       }
     }
@@ -53,9 +56,7 @@ Example Implementation:
 Errata:
 -------
 
-1. Binary frames not yet supported.
-
-2. Message fragmentation is not yet supported.
+1. Message fragmentation is not yet supported.
 
 Known Compatibility
 ----------------------
