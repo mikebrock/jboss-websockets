@@ -16,14 +16,18 @@
 
 package org.jboss.as.websockets.servlet;
 
-import org.jboss.as.websockets.Handshake;
+import org.jboss.websockets.oio.ClosingStrategy;
+import org.jboss.websockets.oio.HttpRequestBridge;
+import org.jboss.websockets.oio.HttpResponseBridge;
+import org.jboss.websockets.oio.OioWebSocket;
+import org.jboss.websockets.oio.WebSocketConnectionManager;
+import org.jboss.websockets.oio.internal.Handshake;
 import org.jboss.as.websockets.WebSocket;
-import org.jboss.as.websockets.WebSocketHeaders;
-import org.jboss.as.websockets.protocol.ClosingStrategy;
-import org.jboss.as.websockets.protocol.ietf00.Hybi00Handshake;
-import org.jboss.as.websockets.protocol.ietf07.Hybi07Handshake;
-import org.jboss.as.websockets.protocol.ietf08.Hybi08Handshake;
-import org.jboss.as.websockets.protocol.ietf13.Hybi13Handshake;
+import org.jboss.websockets.oio.internal.WebSocketHeaders;
+import org.jboss.websockets.oio.internal.protocol.ietf00.Hybi00Handshake;
+import org.jboss.websockets.oio.internal.protocol.ietf07.Hybi07Handshake;
+import org.jboss.websockets.oio.internal.protocol.ietf08.Hybi08Handshake;
+import org.jboss.websockets.oio.internal.protocol.ietf13.Hybi13Handshake;
 import org.jboss.servlet.http.HttpEvent;
 import org.jboss.servlet.http.HttpEventServlet;
 import org.jboss.servlet.http.UpgradableHttpServletResponse;
@@ -37,6 +41,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,21 +54,9 @@ import java.util.List;
  * @author Mike Brock
  */
 public abstract class WebSocketServlet extends HttpServlet implements HttpEventServlet {
-  private static final List<Handshake> websocketHandshakes;
-
   private static final Logger log = LoggerFactory.getLogger(WebSocketServlet.class);
 
   private final String protocolName;
-
-  static {
-    final List<Handshake> handshakeList = new ArrayList<Handshake>();
-    handshakeList.add(new Hybi13Handshake());
-    handshakeList.add(new Hybi07Handshake());
-    handshakeList.add(new Hybi08Handshake());
-    handshakeList.add(new Hybi00Handshake());
-
-    websocketHandshakes = Collections.unmodifiableList(handshakeList);
-  }
 
   /**
    * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation. This is
@@ -85,23 +79,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   private static final String SESSION_WEBSOCKET_HANDLE = "JBoss:AS:WebSocket:Handle";
 
   /**
-   * Sets the standard upgrade headers that are common to all HTTP 101 upgrades, as well as the
-   * SEC_WEBSOCKETS_PROTOCOL header (if the protocol is specified) common to all WebSocket implementations.
-   *
-   * @param response
-   */
-  private void setStandardUpgradeHeaders(final HttpServletResponse response) {
-    response.setHeader("Upgrade", "WebSocket");
-    response.setHeader("Connection", "Upgrade");
-
-    if (protocolName != null)
-      WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, protocolName);
-    else {
-      WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, "*");
-    }
-  }
-
-  /**
    * Handle an event from the web container.
    *
    * @param event
@@ -120,55 +97,76 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
          * Check to see if this request is an HTTP Upgrade request.
          */
         if (response instanceof UpgradableHttpServletResponse) {
+           HttpRequestBridge requestBridge = new HttpRequestBridge()
+           {
+              public String getHeader(String name)
+              {
+                 return request.getHeader(name);
+              }
 
-          /**
-           * Interrogate the request with the available handshakes.
-           */
-          for (Handshake handshake : websocketHandshakes) {
-            if (handshake.matches(request)) {
-              /**
-               * We found a matching handshake, so let's tell the web server we'd like to begin the process of
-               * upgrading this connection to a WebSocket.
-               */
-              ((UpgradableHttpServletResponse) response).startUpgrade();
+              public String getRequestURI()
+              {
+                 return request.getRequestURI();
+              }
 
-              log.debug("Found a compatible handshake: (Version:"
-                      + handshake.getVersion() + "; Handler: " + handshake.getClass().getName() + ")");
+              public InputStream getInputStream()
+              {
+                 try
+                 {
+                    return request.getInputStream();
+                 }
+                 catch (IOException e)
+                 {
+                    throw new RuntimeException(e);
+                 }
+              }
+           };
 
-              setStandardUpgradeHeaders(response);
+           HttpResponseBridge responseBridge = new HttpResponseBridge()
+           {
+              public String getHeader(String name)
+              {
+                 return response.getHeader(name);
+              }
 
-              /**
-               * Generate the server handshake response -- setting the necessary headers and also capturing
-               * any data bound for the body of the response.
-               */
-              final byte[] handShakeData = handshake.generateResponse(event);
+              public void setHeader(String name, String val)
+              {
+                 response.setHeader(name, val);
+              }
 
-              // write the handshake data
-              event.getHttpServletResponse().getOutputStream().write(handShakeData);
+              public OutputStream getOutputStream()
+              {
+                 try
+                 {
+                    return response.getOutputStream();
+                 }
+                 catch (IOException e)
+                 {
+                    throw new RuntimeException(e);
+                 }
+              }
 
-              /**
-               * Obtain an WebSocket instance from the handshaker.
-               */
-              final WebSocket webSocket
-                      = handshake.getWebSocket(event.getHttpServletRequest(), event.getHttpServletResponse(),
-                      new ClosingStrategy() {
-                        public void doClose() throws IOException{
-                          event.close();
-                        }
-                      });
+              public void startUpgrade()
+              {
+                 ((UpgradableHttpServletResponse)response).startUpgrade();
+              }
 
-              log.debug("Using WebSocket implementation: " + webSocket.getClass().getName());
-
-              /**
-               * Record a reference to this WebSocket into the HttpServletRequest so it can be re-referenced
-               * on READ, ERROR, and EOF events.
-               */
-              request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
-
-              ((UpgradableHttpServletResponse) response).sendUpgrade();
-              onSocketOpened(webSocket);
-            }
-          }
+              public void sendUpgrade() throws IOException
+              {
+                 ((UpgradableHttpServletResponse)response).sendUpgrade();
+              }
+           };
+           OioWebSocket oioWebSocket = WebSocketConnectionManager.establish(protocolName, requestBridge, responseBridge,
+                   new ClosingStrategy()
+                   {
+                      public void doClose() throws IOException
+                      {
+                         event.close();
+                      }
+                   });
+           WebSocket webSocket = new WebSocketDelegate(request, oioWebSocket);
+           request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
+           onSocketOpened(webSocket);
         }
         else {
           throw new IllegalStateException("cannot upgrade connection");
