@@ -35,8 +35,7 @@ import java.io.OutputStream;
  * @author Mike Brock
  * @see Hybi00Handshake
  */
-public class Hybi00Socket extends AbstractWebSocket
-{
+public class Hybi00Socket extends AbstractWebSocket {
   private final static int MAX_FRAME_SIZE = 1024 * 32; //32kb
 
   private Hybi00Socket(final InputStream inputStream,
@@ -46,8 +45,8 @@ public class Hybi00Socket extends AbstractWebSocket
   }
 
   public static OioWebSocket from(final HttpRequestBridge request,
-                               final HttpResponseBridge response,
-                               final ClosingStrategy closingStrategy)
+                                  final HttpResponseBridge response,
+                                  final ClosingStrategy closingStrategy)
           throws IOException {
 
     return new Hybi00Socket(

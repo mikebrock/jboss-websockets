@@ -42,8 +42,7 @@ import static org.jboss.websockets.oio.internal.WebSocketHeaders.SEC_WEBSOCKET_V
  *
  * @author Mike Brock
  */
-public class Hybi07Handshake extends Handshake
-{
+public class Hybi07Handshake extends Handshake {
   protected Hybi07Handshake(final String version) {
     super(version, "SHA1", "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
   }
@@ -54,8 +53,8 @@ public class Hybi07Handshake extends Handshake
 
   @Override
   public OioWebSocket getWebSocket(final HttpRequestBridge request,
-                                 final HttpResponseBridge response,
-                                 final ClosingStrategy closingStrategy) throws IOException {
+                                   final HttpResponseBridge response,
+                                   final ClosingStrategy closingStrategy) throws IOException {
     return Hybi07Socket.from(request, response, closingStrategy);
   }
 

@@ -23,17 +23,17 @@ import javax.servlet.http.HttpSession;
 
 /**
  * Represents a handle to a single WebSocket connection. It has reader and writer methods to get data in and out.
- *
+ * <p/>
  * TODO: Implement support for binary frames.
  *
  * @author Mike Brock
  */
-public interface WebSocket extends OioWebSocket
-{
+public interface WebSocket extends OioWebSocket {
 
 
-   /**
+  /**
    * Return the HTTP Session with which this WebSocket is associated.
+   *
    * @return an instance of the HttpSession
    */
   public HttpSession getHttpSession();

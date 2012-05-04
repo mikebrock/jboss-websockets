@@ -54,11 +54,11 @@ public abstract class Handshake {
   }
 
   public abstract OioWebSocket getWebSocket(HttpRequestBridge request,
-                                         HttpResponseBridge response,
-                                         ClosingStrategy closingStrategy) throws IOException;
+                                            HttpResponseBridge response,
+                                            ClosingStrategy closingStrategy) throws IOException;
 
   public abstract boolean matches(HttpRequestBridge request);
 
   public abstract byte[] generateResponse(HttpRequestBridge request,
-                                         HttpResponseBridge response) throws IOException;
+                                          HttpResponseBridge response) throws IOException;
 }

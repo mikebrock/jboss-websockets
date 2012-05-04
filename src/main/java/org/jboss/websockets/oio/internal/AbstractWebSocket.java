@@ -28,8 +28,7 @@ import java.io.OutputStream;
 /**
  * @author Mike Brock
  */
-public abstract class AbstractWebSocket implements OioWebSocket
-{
+public abstract class AbstractWebSocket implements OioWebSocket {
   protected final String webSocketId;
   protected final InputStream inputStream;
   protected final OutputStream outputStream;

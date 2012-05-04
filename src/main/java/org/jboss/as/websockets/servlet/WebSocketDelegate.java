@@ -12,44 +12,36 @@ import java.io.IOException;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-class WebSocketDelegate implements WebSocket
-{
-   protected HttpServletRequest request;
-   protected OioWebSocket delegate;
+class WebSocketDelegate implements WebSocket {
+  protected HttpServletRequest request;
+  protected OioWebSocket delegate;
 
-   public WebSocketDelegate(HttpServletRequest request, OioWebSocket delegate)
-   {
-      this.request = request;
-      this.delegate = delegate;
-   }
+  public WebSocketDelegate(HttpServletRequest request, OioWebSocket delegate) {
+    this.request = request;
+    this.delegate = delegate;
+  }
 
-   public HttpSession getHttpSession()
-   {
-      return request.getSession();
-   }
+  public HttpSession getHttpSession() {
+    return request.getSession();
+  }
 
-   public HttpServletRequest getServletRequest()
-   {
-      return request;
-   }
+  public HttpServletRequest getServletRequest() {
+    return request;
+  }
 
-   public String getSocketID()
-   {
-      return delegate.getSocketID();
-   }
+  public String getSocketID() {
+    return delegate.getSocketID();
+  }
 
-   public Frame readFrame() throws IOException
-   {
-      return delegate.readFrame();
-   }
+  public Frame readFrame() throws IOException {
+    return delegate.readFrame();
+  }
 
-   public void writeFrame(Frame frame) throws IOException
-   {
-      delegate.writeFrame(frame);
-   }
+  public void writeFrame(Frame frame) throws IOException {
+    delegate.writeFrame(frame);
+  }
 
-   public void closeSocket() throws IOException
-   {
-      delegate.closeSocket();
-   }
+  public void closeSocket() throws IOException {
+    delegate.closeSocket();
+  }
 }

@@ -3,6 +3,8 @@ package org.jboss.websockets.frame;
 import org.jboss.websockets.FrameType;
 
 /**
+ * Represents a binary WebSocket frame.
+ *
  * @author Mike Brock
  */
 public class BinaryFrame extends AbstractFrame {

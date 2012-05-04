@@ -39,8 +39,7 @@ import java.io.OutputStream;
  *
  * @author Mike Brock
  */
-public class Hybi07Socket extends AbstractWebSocket
-{
+public class Hybi07Socket extends AbstractWebSocket {
 
   public Hybi07Socket(final InputStream inputStream,
                       final OutputStream outputStream,
@@ -50,8 +49,8 @@ public class Hybi07Socket extends AbstractWebSocket
   }
 
   public static OioWebSocket from(final HttpRequestBridge request,
-                               final HttpResponseBridge response,
-                               final ClosingStrategy closingStrategy) throws IOException {
+                                  final HttpResponseBridge response,
+                                  final ClosingStrategy closingStrategy) throws IOException {
 
     return new Hybi07Socket(
             request.getInputStream(),
@@ -281,12 +280,12 @@ public class Hybi07Socket extends AbstractWebSocket
       case Binary:
         return BinaryFrame.from(_readBinaryFrame());
       case Ping:
-        return new PingFrame();
+        return PingFrame.get();
       case Pong:
-        return new PongFrame();
+        return PongFrame.get();
       case ConnectionClose:
         closeSocket();
-        return new CloseFrame();
+        return CloseFrame.get();
     }
     throw new IOException("unknown frame type");
   }

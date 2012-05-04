@@ -6,7 +6,13 @@ import org.jboss.websockets.FrameType;
  * @author Mike Brock
  */
 public class PingFrame extends AbstractFrame {
-  public PingFrame() {
+  private static final PingFrame INSTANCE = new PingFrame();
+
+  private PingFrame() {
     super(FrameType.Ping);
+  }
+
+  public static PingFrame get() {
+    return INSTANCE;
   }
 }

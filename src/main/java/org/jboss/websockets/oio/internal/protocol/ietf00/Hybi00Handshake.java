@@ -36,8 +36,7 @@ import static org.jboss.websockets.oio.internal.WebSocketHeaders.SEC_WEBSOCKET_K
 /**
  * @author Mike Brock
  */
-public class Hybi00Handshake extends Handshake
-{
+public class Hybi00Handshake extends Handshake {
   public Hybi00Handshake() {
     super("0", "MD5", null);
   }
@@ -56,7 +55,7 @@ public class Hybi00Handshake extends Handshake
 
   @Override
   public byte[] generateResponse(final HttpRequestBridge request,
-                                   final HttpResponseBridge response) throws IOException {
+                                 final HttpResponseBridge response) throws IOException {
 
     if (WebSocketHeaders.ORIGIN.isIn(request)) {
       WebSocketHeaders.SEC_WEBSOCKET_ORIGIN.set(response, WebSocketHeaders.ORIGIN.get(request).trim());

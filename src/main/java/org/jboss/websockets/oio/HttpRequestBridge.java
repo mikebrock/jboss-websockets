@@ -9,9 +9,10 @@ import java.io.InputStream;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public interface HttpRequestBridge
-{
-   String getHeader(String name);
-   String getRequestURI();
-   InputStream getInputStream();
+public interface HttpRequestBridge {
+  String getHeader(String name);
+
+  String getRequestURI();
+
+  InputStream getInputStream();
 }

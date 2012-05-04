@@ -22,6 +22,7 @@ import org.jboss.websockets.oio.HttpResponseBridge;
 import org.jboss.websockets.oio.OioWebSocket;
 import org.jboss.websockets.oio.internal.WebSocketHeaders;
 import org.jboss.websockets.oio.internal.protocol.ietf07.Hybi07Handshake;
+
 import java.io.IOException;
 
 import static org.jboss.websockets.oio.internal.WebSocketHeaders.ORIGIN;
@@ -48,7 +49,7 @@ public class Hybi13Handshake extends Hybi07Handshake {
 
   @Override
   public byte[] generateResponse(final HttpRequestBridge request,
-                                   final HttpResponseBridge response) throws IOException {
+                                 final HttpResponseBridge response) throws IOException {
 
     ORIGIN.copy(request, response);
 

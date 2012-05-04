@@ -59,11 +59,10 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
   private final String protocolName;
 
   /**
-   * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation. This is
-   * not thread-safe. It should only be set from the init() method of the servlet.
+   * Set the protocol name to be returned in the Sec-WebSocket-Protocol header attribute during negotiation.
    *
    * @param protocolName the protocol string to be advertised in the Sec-WebSocket-Protocol header when clients negotiate
-   *                 a new websocket.
+   *                     a new websocket.
    */
   protected WebSocketServlet(String protocolName) {
     this.protocolName = protocolName;
@@ -97,76 +96,60 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
          * Check to see if this request is an HTTP Upgrade request.
          */
         if (response instanceof UpgradableHttpServletResponse) {
-           HttpRequestBridge requestBridge = new HttpRequestBridge()
-           {
-              public String getHeader(String name)
-              {
-                 return request.getHeader(name);
-              }
+          HttpRequestBridge requestBridge = new HttpRequestBridge() {
+            public String getHeader(String name) {
+              return request.getHeader(name);
+            }
 
-              public String getRequestURI()
-              {
-                 return request.getRequestURI();
-              }
+            public String getRequestURI() {
+              return request.getRequestURI();
+            }
 
-              public InputStream getInputStream()
-              {
-                 try
-                 {
-                    return request.getInputStream();
-                 }
-                 catch (IOException e)
-                 {
-                    throw new RuntimeException(e);
-                 }
+            public InputStream getInputStream() {
+              try {
+                return request.getInputStream();
               }
-           };
+              catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            }
+          };
 
-           HttpResponseBridge responseBridge = new HttpResponseBridge()
-           {
-              public String getHeader(String name)
-              {
-                 return response.getHeader(name);
-              }
+          HttpResponseBridge responseBridge = new HttpResponseBridge() {
+            public String getHeader(String name) {
+              return response.getHeader(name);
+            }
 
-              public void setHeader(String name, String val)
-              {
-                 response.setHeader(name, val);
-              }
+            public void setHeader(String name, String val) {
+              response.setHeader(name, val);
+            }
 
-              public OutputStream getOutputStream()
-              {
-                 try
-                 {
-                    return response.getOutputStream();
-                 }
-                 catch (IOException e)
-                 {
-                    throw new RuntimeException(e);
-                 }
+            public OutputStream getOutputStream() {
+              try {
+                return response.getOutputStream();
               }
+              catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            }
 
-              public void startUpgrade()
-              {
-                 ((UpgradableHttpServletResponse)response).startUpgrade();
-              }
+            public void startUpgrade() {
+              ((UpgradableHttpServletResponse) response).startUpgrade();
+            }
 
-              public void sendUpgrade() throws IOException
-              {
-                 ((UpgradableHttpServletResponse)response).sendUpgrade();
-              }
-           };
-           OioWebSocket oioWebSocket = WebSocketConnectionManager.establish(protocolName, requestBridge, responseBridge,
-                   new ClosingStrategy()
-                   {
-                      public void doClose() throws IOException
-                      {
-                         event.close();
-                      }
-                   });
-           WebSocket webSocket = new WebSocketDelegate(request, oioWebSocket);
-           request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
-           onSocketOpened(webSocket);
+            public void sendUpgrade() throws IOException {
+              ((UpgradableHttpServletResponse) response).sendUpgrade();
+            }
+          };
+          OioWebSocket oioWebSocket = WebSocketConnectionManager.establish(protocolName, requestBridge, responseBridge,
+                  new ClosingStrategy() {
+                    public void doClose() throws IOException {
+                      event.close();
+                    }
+                  });
+          WebSocket webSocket = new WebSocketDelegate(request, oioWebSocket);
+          request.setAttribute(SESSION_WEBSOCKET_HANDLE, webSocket);
+          onSocketOpened(webSocket);
         }
         else {
           throw new IllegalStateException("cannot upgrade connection");
@@ -274,6 +257,6 @@ public abstract class WebSocketServlet extends HttpServlet implements HttpEventS
    * @param socket A reference to the WebSocket writer interface associated with this socket.
    * @throws IOException
    */
-  protected void onReceivedFrame(final WebSocket socket) throws IOException{
+  protected void onReceivedFrame(final WebSocket socket) throws IOException {
   }
 }
