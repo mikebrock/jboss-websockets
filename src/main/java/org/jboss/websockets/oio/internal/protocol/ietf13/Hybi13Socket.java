@@ -131,7 +131,7 @@ public class Hybi13Socket extends AbstractWebSocket {
     int read = 0;
     if (frameMasked) {
       do {
-        buf[read] = (byte) ((inputStream.read() ^ frameMaskingKey[read % 4]) & 127);
+        buf[read] = (byte) ((inputStream.read() ^ frameMaskingKey[read % 4]));
       }
       while (++read < payloadLength);
     }
@@ -148,7 +148,6 @@ public class Hybi13Socket extends AbstractWebSocket {
   }
 
   private void _writeTextFrame(final String txt) throws IOException {
-
     byte[] strBytes = txt.getBytes("UTF-8");
     final int len = strBytes.length;
 
@@ -270,5 +269,9 @@ public class Hybi13Socket extends AbstractWebSocket {
       default:
         throw new IOException("unable to handle frame type: " + frame.getType());
     }
+  }
+
+  public static void main(String[] args) {
+    System.out.println(Integer.toBinaryString(Byte.MIN_VALUE).substring(24));
   }
 }
