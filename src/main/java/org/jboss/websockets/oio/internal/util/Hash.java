@@ -30,19 +30,36 @@ public final class Hash {
   final static String secureRandomAlgorithm = "SHA1PRNG";
   final static String hashAlgorithm = "SHA1";
   final static SecureRandom random;
+  final static byte[] seed;
+
+  // don't bother using volatile. a thread race doesn't matter.
+  private static int hashCounter = 0;
 
   static {
     try {
       random = SecureRandom.getInstance(secureRandomAlgorithm);
       random.setSeed(SecureRandom.getInstance(secureRandomAlgorithm).generateSeed(64));
+      hashCounter = random.nextInt();
+      random.nextBytes(seed = new byte[128]);
     }
     catch (NoSuchAlgorithmException e) {
       throw new RuntimeException("runtime does not support secure random algorithm: " + secureRandomAlgorithm);
     }
   }
 
-  public static void getRandomBytes(byte[] bytes) {
-    random.nextBytes(bytes);
+  public static void getRandomBytes(final byte[] bytes) {
+    if (hashCounter < 0) {
+      hashCounter -= hashCounter;
+    }
+    for (int i = 0; i < bytes.length; i++) {
+      hashCounter++;
+      bytes[i] = (byte) (seed[(i + hashCounter) % seed.length] % Byte.MAX_VALUE);
+
+      if (hashCounter++ % 1000 > 500) {
+        // sign the byte.
+        bytes[i] = (byte) -bytes[i];
+      }
+    }
   }
 
   public static String newUniqueHash() {
@@ -59,8 +76,8 @@ public final class Hash {
         md.update(additionalSeed);
       }
 
-      byte[] randBytes = new byte[64];
-      random.nextBytes(randBytes);
+      byte[] randBytes = new byte[32];
+      getRandomBytes(randBytes);
 
       // 1,000 rounds.
       for (int i = 0; i < 1000; i++) {
