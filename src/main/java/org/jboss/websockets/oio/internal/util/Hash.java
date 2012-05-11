@@ -40,14 +40,14 @@ public final class Hash {
       random = SecureRandom.getInstance(secureRandomAlgorithm);
       random.setSeed(SecureRandom.getInstance(secureRandomAlgorithm).generateSeed(64));
       hashCounter = random.nextInt();
-      random.nextBytes(seed = new byte[128]);
+      random.nextBytes(seed = new byte[512]);
     }
     catch (NoSuchAlgorithmException e) {
       throw new RuntimeException("runtime does not support secure random algorithm: " + secureRandomAlgorithm);
     }
   }
 
-  public static void getRandomBytes(final byte[] bytes) {
+  public static byte[] getRandomBytes(final byte[] bytes) {
     if (hashCounter < 0) {
       hashCounter -= hashCounter;
     }
@@ -60,10 +60,11 @@ public final class Hash {
         bytes[i] = (byte) -bytes[i];
       }
     }
+    return bytes;
   }
 
   public static String newUniqueHash() {
-    return nextSecureHash(hashAlgorithm, SecureRandom.getSeed(128));
+    return nextSecureHash(hashAlgorithm, getRandomBytes(new byte[64]));
   }
 
   private static String nextSecureHash(final String algorithm, final byte[] additionalSeed) {

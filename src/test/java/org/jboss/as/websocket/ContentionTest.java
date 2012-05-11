@@ -16,7 +16,7 @@ public class ContentionTest {
 
   class HashRunner implements Runnable {
     public void run() {
-      Hash.newUniqueHash();
+      Hash.getRandomBytes(new byte[512]);
       counter.incrementAndGet();
     }
   }
@@ -26,8 +26,8 @@ public class ContentionTest {
     final ScheduledExecutorService scheduledExecutorService =
             Executors.newScheduledThreadPool(5);
 
-    for (int i = 0; i < 5; i++) {
-      scheduledExecutorService.scheduleAtFixedRate(new HashRunner(), 0, 1, TimeUnit.MICROSECONDS) ;
+    for (int i = 0; i < 4; i++) {
+      scheduledExecutorService.scheduleAtFixedRate(new HashRunner(), 0, 10, TimeUnit.MICROSECONDS) ;
     }
 
     scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -36,6 +36,6 @@ public class ContentionTest {
       }
     }, 0, 1000, TimeUnit.MILLISECONDS);
 
-    scheduledExecutorService.awaitTermination(5, TimeUnit.MINUTES);
+    scheduledExecutorService.awaitTermination(10, TimeUnit.SECONDS);
   }
 }
