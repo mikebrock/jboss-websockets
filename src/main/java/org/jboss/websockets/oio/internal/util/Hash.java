@@ -55,9 +55,14 @@ public final class Hash {
       hashCounter++;
       bytes[i] = (byte) (seed[(i + hashCounter) % seed.length] % Byte.MAX_VALUE);
 
-      if (hashCounter++ % 1000 > 500) {
+      if (hashCounter % 1000 > 500) {
         // sign the byte.
         bytes[i] = (byte) -bytes[i];
+      }
+
+      if (hashCounter % 500 == 0) {
+        // every 500 hashes or so, get some new entropy, and don't worry about thread races here.
+        random.nextBytes(seed);
       }
     }
     return bytes;
@@ -92,7 +97,7 @@ public final class Hash {
     }
   }
 
-  private static String hashToHexString(byte[] hash) {
+  public static String hashToHexString(byte[] hash) {
     final StringBuilder hexString = new StringBuilder(hash.length);
     for (byte mdbyte : hash) {
       hexString.append(Integer.toHexString(0xFF & mdbyte));

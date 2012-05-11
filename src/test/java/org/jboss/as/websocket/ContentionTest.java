@@ -27,7 +27,7 @@ public class ContentionTest {
             Executors.newScheduledThreadPool(5);
 
     for (int i = 0; i < 4; i++) {
-      scheduledExecutorService.scheduleAtFixedRate(new HashRunner(), 0, 10, TimeUnit.MICROSECONDS) ;
+      scheduledExecutorService.scheduleAtFixedRate(new HashRunner(), 0, 50, TimeUnit.MICROSECONDS) ;
     }
 
     scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -36,6 +36,6 @@ public class ContentionTest {
       }
     }, 0, 1000, TimeUnit.MILLISECONDS);
 
-    scheduledExecutorService.awaitTermination(10, TimeUnit.SECONDS);
+    scheduledExecutorService.awaitTermination(30, TimeUnit.SECONDS);
   }
 }
