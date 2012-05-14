@@ -46,7 +46,7 @@ Example Implementation:
         if (frame instanceof TextFrame) {
           final String text = ((TextFrame) frame).getText();
           if ("Hello".equals(text)) {
-            socket.writeFrame(new TextFrame("Hey, there!"));
+            socket.writeFrame(TextFrame.from("Hey, there!"));
           }
         }
       }
