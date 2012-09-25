@@ -50,7 +50,7 @@ public class WebSocketConnectionManager {
         if (protocolName != null)
           WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, protocolName);
         else {
-          WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, "*");
+          WebSocketHeaders.SEC_WEBSOCKET_PROTOCOL.set(response, null);
         }
 
         /**
