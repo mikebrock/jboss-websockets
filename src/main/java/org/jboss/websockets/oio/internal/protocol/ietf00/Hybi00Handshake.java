@@ -114,7 +114,13 @@ public class Hybi00Handshake extends Handshake {
     }
 
     final String digits = encoded.replaceAll("[^0-9]", "");
-    final long product = Long.parseLong(digits);
+    final long product;
+    try {
+        product = Long.parseLong(digits);
+    }
+    catch (NumberFormatException e){
+        throw new NumberFormatException("Passed key to decode is not a parsable long");
+    }
     return product / numSpaces;
   }
 }

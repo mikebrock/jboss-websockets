@@ -14,4 +14,11 @@ public class HandshakeTests {
             "B..r..\\8".getBytes())));
   }
 
+  @Test(expected=NumberFormatException.class)
+  public void testHandshakeInvalidDecodeKey() {
+    System.out.println(new String(Hybi00Handshake.solve("MD5", Hybi00Handshake.decodeKey(""),
+            Hybi00Handshake.decodeKey(""),
+            "".getBytes())));
+  }
+
 }
